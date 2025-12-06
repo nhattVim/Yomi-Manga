@@ -108,7 +108,7 @@ fun ExploreScreen(
                         items(uiState.mangaList) { manga ->
                             MangaCard(
                                 manga = manga,
-                                onClick = { onMangaClick(manga.id) }
+                                onClick = { onMangaClick(manga.slug) }
                             )
                         }
                     }

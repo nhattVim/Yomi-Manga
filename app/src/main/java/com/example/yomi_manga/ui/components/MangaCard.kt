@@ -12,10 +12,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.yomi_manga.data.model.Manga
 
 @Composable
 fun MangaCard(
-    manga: com.example.yomi_manga.data.model.Manga,
+    manga: Manga,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -50,7 +51,7 @@ fun MangaCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                manga.author?.let {
+                manga.authorName?.let {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodySmall,

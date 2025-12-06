@@ -78,7 +78,11 @@ fun HomeScreen(
                 value = searchQuery,
                 onValueChange = { query ->
                     searchQuery = query
-                    viewModel.searchManga(query)
+                    if (query.isBlank()) {
+                        viewModel.loadHomeManga()
+                    } else {
+                        viewModel.searchManga(query)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,7 +113,13 @@ fun HomeScreen(
                                 text = "Lỗi: ${uiState.error}",
                                 color = MaterialTheme.colorScheme.error
                             )
-                            Button(onClick = { viewModel.loadMangaList() }) {
+                            Button(onClick = { 
+                                if (searchQuery.isBlank()) {
+                                    viewModel.loadHomeManga()
+                                } else {
+                                    viewModel.searchManga(searchQuery)
+                                }
+                            }) {
                                 Text("Thử lại")
                             }
                         }
@@ -125,7 +135,7 @@ fun HomeScreen(
                         items(uiState.mangaList) { manga ->
                             MangaCard(
                                 manga = manga,
-                                onClick = { onMangaClick(manga.id) }
+                                onClick = { onMangaClick(manga.slug) }
                             )
                         }
                     }

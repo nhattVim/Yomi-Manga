@@ -1,41 +1,41 @@
 package com.example.yomi_manga.data.api
 
+import com.example.yomi_manga.data.model.ChapterResponse
 import com.example.yomi_manga.data.model.MangaDetailResponse
-import com.example.yomi_manga.data.model.MangaResponse
+import com.example.yomi_manga.data.model.MangaListResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 interface OtruyenApiService {
     
-    @GET("manga")
-    suspend fun getMangaList(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<MangaResponse>
+    @GET("home")
+    suspend fun getHomeManga(): Response<MangaListResponse>
     
-    @GET("manga/{id}")
+    @GET("danh-sach/truyen-moi")
+    suspend fun getLatestManga(
+        @Query("page") page: Int = 1
+    ): Response<MangaListResponse>
+    
+    @GET("truyen-tranh/{slug}")
     suspend fun getMangaDetail(
-        @Path("id") id: String
+        @Path("slug") slug: String
     ): Response<MangaDetailResponse>
     
-    @GET("manga/search")
+    @GET("tim-kiem")
     suspend fun searchManga(
-        @Query("q") query: String,
+        @Query("keyword") keyword: String,
         @Query("page") page: Int = 1
-    ): Response<MangaResponse>
+    ): Response<MangaListResponse>
     
-    @GET("manga/popular")
-    suspend fun getPopularManga(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<MangaResponse>
+    @GET("the-loai/{slug}")
+    suspend fun getMangaByCategory(
+        @Path("slug") slug: String,
+        @Query("page") page: Int = 1
+    ): Response<MangaListResponse>
     
-    @GET("manga/latest")
-    suspend fun getLatestManga(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<MangaResponse>
+    @GET
+    suspend fun getChapter(@Url url: String): Response<ChapterResponse>
 }
-

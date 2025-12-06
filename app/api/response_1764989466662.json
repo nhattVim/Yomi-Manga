@@ -1,0 +1,66 @@
+{
+  "url": "https://otruyenapi.com/v1/api/truyen-tranh/thuong-hoang-tro-ve",
+  "status": "success",
+  "message": "",
+  "data": {
+    "seoOnPage": {
+      "og_type": "website",
+      "titleHead": "Thương Hoàng Trở Về - ",
+      "seoSchema": {
+        "@context": "https://schema.org",
+        "@type": "website",
+        "name": "Thương Hoàng Trở Về - ",
+        "url": "https://otruyen.cc/truyen-tranh/thuong-hoang-tro-ve",
+        "image": "https://img.otruyenapi.com/uploads/comics/thuong-hoang-tro-ve-thumb.jpg",
+        "director": "Mộng Tiên Giới"
+      },
+      "descriptionHead": "Truyện tranh Thương Hoàng Trở Về được cập nhật nhanh và đầy đủ nhất tại TruyenQQ. Bạn đọc đừng quên để lại bình luận và chia sẻ, ủng hộ TruyenQQ ra các chương mới nhất của truyện ...",
+      "og_image": [
+        "comics/thuong-hoang-tro-ve-thumb.jpg"
+      ],
+      "updated_time": 1764988328484,
+      "og_url": "truyen-tranh/thuong-hoang-tro-ve"
+    },
+    "breadCrumb": [
+      {
+        "name": "Action",
+        "slug": "/the-loai/action",
+        "position": 2
+      },
+      {
+        "name": "Thương Hoàng Trở Về",
+        "isCurrent": true,
+        "position": 3
+      }
+    ],
+    "params": {
+      "slug": "thuong-hoang-tro-ve",
+      "crawl_check_url": ""
+    },
+    "item": {
+      "_id": "693395a8679e2c7ab94297c2",
+      "name": "Thương Hoàng Trở Về",
+      "slug": "thuong-hoang-tro-ve",
+      "origin_name": [
+        ""
+      ],
+      "content": "Truyện tranh Thương Hoàng Trở Về được cập nhật nhanh và đầy đủ nhất tại TruyenQQ. Bạn đọc đừng quên để lại bình luận và chia sẻ, ủng hộ TruyenQQ ra các chương mới nhất của truyện            Thương Hoàng Trở Về.",
+      "status": "ongoing",
+      "thumb_url": "thuong-hoang-tro-ve-thumb.jpg",
+      "sub_docquyen": false,
+      "author": [
+        "Mộng Tiên Giới"
+      ],
+      "category": [
+        {
+          "id": "6508654905d5791ad671a491",
+          "name": "Action",
+          "slug": "action"
+        }
+      ],
+      "chapters": [],
+      "updatedAt": "2025-12-06T02:32:08.484Z"
+    },
+    "APP_DOMAIN_CDN_IMAGE": "https://img.otruyenapi.com"
+  }
+}

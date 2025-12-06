@@ -10,6 +10,7 @@ object AppConstants {
     const val MAX_READING_HISTORY = 50
     
     const val NAV_ARG_MANGA_ID = "mangaId"
+    const val NAV_ARG_MANGA_SLUG = "mangaSlug"
     const val NAV_ARG_CHAPTER_ID = "chapterId"
     
     const val TAG_AUTH = "AuthRepository"

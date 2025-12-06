@@ -1,5 +1,6 @@
 package com.example.yomi_manga.ui.navigation
 
+import android.util.Base64
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -32,8 +33,13 @@ sealed class Screen(val route: String) {
     object Detail : Screen("detail/{${AppConstants.NAV_ARG_MANGA_ID}}") {
         fun createRoute(mangaId: String) = "detail/$mangaId"
     }
-    object Reader : Screen("reader/{${AppConstants.NAV_ARG_CHAPTER_ID}}") {
-        fun createRoute(chapterId: String) = "reader/$chapterId"
+    object Reader : Screen("reader/{${AppConstants.NAV_ARG_CHAPTER_ID}}?${AppConstants.NAV_ARG_MANGA_SLUG}={${AppConstants.NAV_ARG_MANGA_SLUG}}") {
+        fun createRoute(chapterId: String, mangaSlug: String? = null) = 
+            if (mangaSlug != null) {
+                "reader/$chapterId?${AppConstants.NAV_ARG_MANGA_SLUG}=$mangaSlug"
+            } else {
+                "reader/$chapterId"
+            }
     }
 }
 
@@ -140,17 +146,31 @@ fun NavGraph(
             MangaDetailScreen(
                 mangaId = mangaId,
                 onBackClick = { navController.popBackStack() },
-                onChapterClick = { chapterId ->
-                    navController.navigate(Screen.Reader.createRoute(chapterId))
+                onChapterClick = { chapterUrl ->
+                    val encodedUrl = Base64.encodeToString(chapterUrl.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+                    navController.navigate(Screen.Reader.createRoute(encodedUrl, mangaId))
                 }
             )
         }
         
         composable(Screen.Reader.route) { backStackEntry ->
-            val chapterId = backStackEntry.arguments?.getString(AppConstants.NAV_ARG_CHAPTER_ID) ?: ""
+            val encodedChapterId = backStackEntry.arguments?.getString(AppConstants.NAV_ARG_CHAPTER_ID) ?: ""
+            val mangaSlug = backStackEntry.arguments?.getString(AppConstants.NAV_ARG_MANGA_SLUG)
+            val chapterId = try {
+                String(Base64.decode(encodedChapterId, Base64.NO_WRAP), Charsets.UTF_8)
+            } catch (e: Exception) {
+                encodedChapterId
+            }
             ReaderScreen(
                 chapterId = chapterId,
-                onBackClick = { navController.popBackStack() }
+                mangaSlug = mangaSlug,
+                onBackClick = { navController.popBackStack() },
+                onChapterChange = { newChapterUrl ->
+                    val newEncodedUrl = Base64.encodeToString(newChapterUrl.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+                    navController.navigate(Screen.Reader.createRoute(newEncodedUrl, mangaSlug)) {
+                        popUpTo(Screen.Reader.route) { inclusive = true }
+                    }
+                }
             )
         }
     }

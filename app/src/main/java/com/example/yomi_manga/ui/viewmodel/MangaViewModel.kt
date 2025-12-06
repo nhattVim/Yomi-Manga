@@ -30,13 +30,13 @@ class MangaViewModel(
     val uiState: StateFlow<MangaUiState> = _uiState.asStateFlow()
     
     init {
-        loadMangaList()
+        loadHomeManga()
     }
     
-    fun loadMangaList(page: Int = 1, limit: Int = AppConstants.DEFAULT_PAGE_SIZE) {
+    fun loadMangaList(page: Int = 1) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getMangaList(page, limit).fold(
+            repository.getMangaList(page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
                         mangaList = mangaList,
@@ -55,10 +55,32 @@ class MangaViewModel(
         }
     }
     
-    fun loadMangaDetail(id: String) {
+    fun loadHomeManga() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getMangaDetail(id).fold(
+            repository.getHomeManga().fold(
+                onSuccess = { mangaList ->
+                    _uiState.value = _uiState.value.copy(
+                        mangaList = mangaList,
+                        isLoading = false,
+                        error = null
+                    )
+                },
+                onFailure = { throwable ->
+                    val appError = AppError.fromThrowable(throwable)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = appError.message
+                    )
+                }
+            )
+        }
+    }
+    
+    fun loadMangaDetail(slug: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            repository.getMangaDetail(slug).fold(
                 onSuccess = { manga ->
                     _uiState.value = _uiState.value.copy(
                         selectedManga = manga,
@@ -104,10 +126,10 @@ class MangaViewModel(
         }
     }
     
-    fun loadPopularManga(page: Int = 1, limit: Int = AppConstants.DEFAULT_PAGE_SIZE) {
+    fun loadPopularManga(page: Int = 1) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getPopularManga(page, limit).fold(
+            repository.getPopularManga(page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
                         mangaList = mangaList,

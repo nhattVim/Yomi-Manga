@@ -1,0 +1,1203 @@
+{
+  "url": "https://otruyenapi.com/v1/api/the-loai/anime?page=1",
+  "status": "success",
+  "message": "",
+  "data": {
+    "seoOnPage": {
+      "og_type": "website",
+      "titleHead": "Anime",
+      "og_image": [
+        "/uploads/comics/chuyen-sinh-thanh-lieu-dot-bien-thumb.jpg",
+        "/uploads/comics/doraemon-thumb.jpg",
+        "/uploads/comics/cuoc-song-thuong-ngay-thumb.jpg",
+        "/uploads/comics/trong-sinh-dia-cau-tien-ton-thumb.jpg",
+        "/uploads/comics/high-card-♦9-no-mercy-thumb.jpg",
+        "/uploads/comics/days-thumb.jpg",
+        "/uploads/comics/luon-co-than-tien-muon-ham-hai-ta-thumb.jpg",
+        "/uploads/comics/than-bay-duoc-trieu-hoi-sang-di-gioi-ke-san-anh-hung-thumb.jpg",
+        "/uploads/comics/album-natural-wallpapers-thumb.jpg",
+        "/uploads/comics/chuyen-cua-yokai-thumb.jpg",
+        "/uploads/comics/tinh-lo-phu-thuy-thumb.jpg",
+        "/uploads/comics/d4dj-the-story-of-happy-around-thumb.jpg",
+        "/uploads/comics/konjiki-no-gash-thumb.jpg",
+        "/uploads/comics/ta-la-vua-phap-su-thumb.jpg",
+        "/uploads/comics/thien-than-rot-xuong-nha-tui-thumb.jpg",
+        "/uploads/comics/detchiage-thay-giao-sat-nhan-thumb.jpg",
+        "/uploads/comics/phat-anh-tu-thien-thumb.jpg",
+        "/uploads/comics/thinh-the-hoa-sung-toi-bi-bat-lam-tu-binh-thumb.jpg",
+        "/uploads/comics/nguoi-o-re-manh-nhat-thumb.jpg",
+        "/uploads/comics/that-kiem-anh-hung-thumb.jpg",
+        "/uploads/comics/nam-than-baby-nhanh-vao-chen-thumb.jpg",
+        "/uploads/comics/linh-sung-manh-the-gia-dao-thumb.jpg",
+        "/uploads/comics/la-chan-mat-thumb.jpg",
+        "/uploads/comics/lylun-eye-thumb.jpg"
+      ],
+      "og_url": "the-loai/anime"
+    },
+    "breadCrumb": [
+      {
+        "name": "Anime",
+        "slug": "/the-loai/anime",
+        "isCurrent": false,
+        "position": 2
+      },
+      {
+        "name": "Trang 1",
+        "isCurrent": true,
+        "position": 3
+      }
+    ],
+    "titlePage": "Anime",
+    "items": [
+      {
+        "_id": "6591220510dc9c0a7e2e57ec",
+        "name": "Chuyển Sinh Thành Liễu Đột Biến",
+        "slug": "chuyen-sinh-thanh-lieu-dot-bien",
+        "origin_name": [
+          "Từ Đại Thụ Tiến Hóa"
+        ],
+        "status": "ongoing",
+        "thumb_url": "chuyen-sinh-thanh-lieu-dot-bien-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a6",
+            "name": "Adventure",
+            "slug": "adventure"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4c7",
+            "name": "Fantasy",
+            "slug": "fantasy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2025-12-01T04:39:35.797Z",
+        "chaptersLatest": [
+          {
+            "filename": "Chuyển Sinh Thành Liễu Đột Biến [Chap 463]",
+            "chapter_name": "463",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/692d1b127a48932b83d6be22"
+          }
+        ]
+      },
+      {
+        "_id": "658f7e2668e54cf5b50909b6",
+        "name": "Doraemon",
+        "slug": "doraemon",
+        "origin_name": [
+          "Đôrêmon"
+        ],
+        "status": "completed",
+        "thumb_url": "doraemon-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4c7",
+            "name": "Fantasy",
+            "slug": "fantasy"
+          },
+          {
+            "id": "6508654905d5791ad671a4ce",
+            "name": "Historical",
+            "slug": "historical"
+          },
+          {
+            "id": "6508654905d5791ad671a4ec",
+            "name": "School Life",
+            "slug": "school-life"
+          },
+          {
+            "id": "6508654905d5791ad671a4f6",
+            "name": "Shounen",
+            "slug": "shounen"
+          },
+          {
+            "id": "6508654a05d5791ad671a4fa",
+            "name": "Slice of Life",
+            "slug": "slice-of-life"
+          },
+          {
+            "id": "6508654a05d5791ad671a504",
+            "name": "Supernatural",
+            "slug": "supernatural"
+          },
+          {
+            "id": "6508654a05d5791ad671a508",
+            "name": "Thiếu Nhi",
+            "slug": "thieu-nhi"
+          }
+        ],
+        "updatedAt": "2023-12-30T17:06:13.528Z",
+        "chaptersLatest": [
+          {
+            "filename": "Doraemon [Chap 1-823]",
+            "chapter_name": "823",
+            "chapter_title": "Hành tinh Garapa (END)",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65901c27e120ddf2199230b3"
+          }
+        ]
+      },
+      {
+        "_id": "658f7bc268e54cf5b50905d7",
+        "name": "Cuộc sống thường ngày",
+        "slug": "cuoc-song-thuong-ngay",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "cuoc-song-thuong-ngay-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d4",
+            "name": "Live action",
+            "slug": "live-action"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654905d5791ad671a4ec",
+            "name": "School Life",
+            "slug": "school-life"
+          },
+          {
+            "id": "6508654a05d5791ad671a4fa",
+            "name": "Slice of Life",
+            "slug": "slice-of-life"
+          }
+        ],
+        "updatedAt": "2024-05-10T04:05:38.635Z",
+        "chaptersLatest": [
+          {
+            "filename": "Cuộc sống thường ngày [Chap 121-128]",
+            "chapter_name": "128",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/663d89caaef0fda6f81b9db4"
+          }
+        ]
+      },
+      {
+        "_id": "658a43de68e54cf5b508e4a0",
+        "name": "Trọng Sinh Địa Cầu Tiên Tôn",
+        "slug": "trong-sinh-dia-cau-tien-ton",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "trong-sinh-dia-cau-tien-ton-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a6",
+            "name": "Adventure",
+            "slug": "adventure"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          }
+        ],
+        "updatedAt": "2025-07-07T06:03:12.301Z",
+        "chaptersLatest": [
+          {
+            "filename": "Trọng Sinh Địa Cầu Tiên Tôn [Chap 298]",
+            "chapter_name": "298",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/686a0353c926626890ab2112"
+          }
+        ]
+      },
+      {
+        "_id": "6588f92f68e54cf5b508def0",
+        "name": "High Card - ♦9 No Mercy",
+        "slug": "high-card-♦9-no-mercy",
+        "origin_name": [
+          "High Card manga"
+        ],
+        "status": "ongoing",
+        "thumb_url": "high-card-♦9-no-mercy-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654a05d5791ad671a504",
+            "name": "Supernatural",
+            "slug": "supernatural"
+          }
+        ],
+        "updatedAt": "2024-03-26T06:51:03.679Z",
+        "chaptersLatest": [
+          {
+            "filename": "High Card - ♦9 No Mercy [Chap 1-12.4]",
+            "chapter_name": "12.4",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/66026c408d19104b9c749499"
+          }
+        ]
+      },
+      {
+        "_id": "6588f70668e54cf5b508dba0",
+        "name": "Days",
+        "slug": "days",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "days-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654905d5791ad671a4ec",
+            "name": "School Life",
+            "slug": "school-life"
+          },
+          {
+            "id": "6508654a05d5791ad671a502",
+            "name": "Sports",
+            "slug": "sports"
+          }
+        ],
+        "updatedAt": "2025-12-03T08:26:20.781Z",
+        "chaptersLatest": [
+          {
+            "filename": "Days [Chap 336-339]",
+            "chapter_name": "339",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/692ff38fdee12c04272fe51a"
+          }
+        ]
+      },
+      {
+        "_id": "6582627f10dc9c0a7e2df616",
+        "name": "Luôn Có Thần Tiên Muốn Hãm Hại Ta",
+        "slug": "luon-co-than-tien-muon-ham-hai-ta",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "luon-co-than-tien-muon-ham-hai-ta-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654905d5791ad671a4e2",
+            "name": "Mystery",
+            "slug": "mystery"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-20T04:22:43.782Z",
+        "chaptersLatest": [
+          {
+            "filename": "Luôn Có Thần Tiên Muốn Hãm Hại Ta [Chap 1-114]",
+            "chapter_name": "114",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6581ad6ca7b870682dc91fbc"
+          }
+        ]
+      },
+      {
+        "_id": "657fe3b768e54cf5b5089f93",
+        "name": "Thần Bẫy được triệu hồi sang dị giới Kẻ săn anh hùng",
+        "slug": "than-bay-duoc-trieu-hoi-sang-di-gioi-ke-san-anh-hung",
+        "origin_name": [
+          "Magatsu Wanashi no Yuusha kari"
+        ],
+        "status": "ongoing",
+        "thumb_url": "than-bay-duoc-trieu-hoi-sang-di-gioi-ke-san-anh-hung-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a6",
+            "name": "Adventure",
+            "slug": "adventure"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4b2",
+            "name": "Comic",
+            "slug": "comic"
+          },
+          {
+            "id": "6508654905d5791ad671a4be",
+            "name": "Drama",
+            "slug": "drama"
+          },
+          {
+            "id": "6508654905d5791ad671a4c7",
+            "name": "Fantasy",
+            "slug": "fantasy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654905d5791ad671a4ea",
+            "name": "Romance",
+            "slug": "romance"
+          },
+          {
+            "id": "6508654905d5791ad671a4f6",
+            "name": "Shounen",
+            "slug": "shounen"
+          },
+          {
+            "id": "6508654a05d5791ad671a504",
+            "name": "Supernatural",
+            "slug": "supernatural"
+          },
+          {
+            "id": "6508654a05d5791ad671a50a",
+            "name": "Tragedy",
+            "slug": "tragedy"
+          }
+        ],
+        "updatedAt": "2023-12-18T12:53:04.925Z",
+        "chaptersLatest": [
+          {
+            "filename": "Thần Bẫy được triệu hồi sang dị giới Kẻ săn anh hùng [Chap 1-12]",
+            "chapter_name": "12",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/657d2ebca7b870682dc836ce"
+          }
+        ]
+      },
+      {
+        "_id": "657e5ae468e54cf5b5089493",
+        "name": "Album Natural Wallpapers",
+        "slug": "album-natural-wallpapers",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "album-natural-wallpapers-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          }
+        ],
+        "updatedAt": "2023-12-17T03:51:18.111Z",
+        "chaptersLatest": [
+          {
+            "filename": "Album Natural Wallpapers [Chap 1-74]",
+            "chapter_name": "74",
+            "chapter_title": "( GI beautifull )",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/657bc1d5a7b870682dc795ce"
+          }
+        ]
+      },
+      {
+        "_id": "657e5ac310dc9c0a7e2ddc3d",
+        "name": "Chuyện của Yokai",
+        "slug": "chuyen-cua-yokai",
+        "origin_name": [
+          "Yokai Day"
+        ],
+        "status": "ongoing",
+        "thumb_url": "chuyen-cua-yokai-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4b2",
+            "name": "Comic",
+            "slug": "comic"
+          },
+          {
+            "id": "6508654905d5791ad671a4e6",
+            "name": "One shot",
+            "slug": "one-shot"
+          },
+          {
+            "id": "6508654905d5791ad671a4f2",
+            "name": "Shoujo",
+            "slug": "shoujo"
+          },
+          {
+            "id": "6508654a05d5791ad671a514",
+            "name": "Webtoon",
+            "slug": "webtoon"
+          }
+        ],
+        "updatedAt": "2023-12-17T04:02:17.372Z",
+        "chaptersLatest": [
+          {
+            "filename": "Chuyện của Yokai [Chap 1-91]",
+            "chapter_name": "91",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/657bc740a7b870682dc7a8fe"
+          }
+        ]
+      },
+      {
+        "_id": "657a77e010dc9c0a7e2dc245",
+        "name": "Tinh Lộ Phù Thủy",
+        "slug": "tinh-lo-phu-thuy",
+        "origin_name": [
+          "Ngôi Sao Phù Thủy",
+          "Star Road Witch",
+          "IDOL & WITCH"
+        ],
+        "status": "completed",
+        "thumb_url": "tinh-lo-phu-thuy-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4b2",
+            "name": "Comic",
+            "slug": "comic"
+          },
+          {
+            "id": "6508654905d5791ad671a4be",
+            "name": "Drama",
+            "slug": "drama"
+          },
+          {
+            "id": "6508654905d5791ad671a4c7",
+            "name": "Fantasy",
+            "slug": "fantasy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654905d5791ad671a4e4",
+            "name": "Ngôn Tình",
+            "slug": "ngon-tinh"
+          },
+          {
+            "id": "6508654a05d5791ad671a506",
+            "name": "Tạp chí truyện tranh",
+            "slug": "tap-chi-truyen-tranh"
+          }
+        ],
+        "updatedAt": "2023-12-14T05:08:19.807Z",
+        "chaptersLatest": [
+          {
+            "filename": "Tinh Lộ Phù Thủy [Chap 1-25]",
+            "chapter_name": "25",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6577ea31e120ddf2198a0bcf"
+          }
+        ]
+      },
+      {
+        "_id": "657670e710dc9c0a7e2da6d2",
+        "name": "D4Dj -The Story Of Happy Around!",
+        "slug": "d4dj-the-story-of-happy-around",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "d4dj-the-story-of-happy-around-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          }
+        ],
+        "updatedAt": "2023-12-11T03:51:37.474Z",
+        "chaptersLatest": [
+          {
+            "filename": "D4Dj -The Story Of Happy Around! [Chap 1-3]",
+            "chapter_name": "3",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6575aaf9e120ddf21988b8d4"
+          }
+        ]
+      },
+      {
+        "_id": "657670bc10dc9c0a7e2da68e",
+        "name": "Konjiki no Gash!!",
+        "slug": "konjiki-no-gash",
+        "origin_name": [
+          "Gasshu",
+          "cậu bé bí ẩn"
+        ],
+        "status": "ongoing",
+        "thumb_url": "konjiki-no-gash-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4f6",
+            "name": "Shounen",
+            "slug": "shounen"
+          }
+        ],
+        "updatedAt": "2023-12-11T03:56:51.189Z",
+        "chaptersLatest": [
+          {
+            "filename": "Konjiki no Gash!! [Chap 1-323]",
+            "chapter_name": "323",
+            "chapter_title": "lá thư của gash",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6575b24ca7b870682dc4f04b"
+          }
+        ]
+      },
+      {
+        "_id": "6576707e10dc9c0a7e2da633",
+        "name": "Ta Là Vua Pháp Sư",
+        "slug": "ta-la-vua-phap-su",
+        "origin_name": [
+          "I Am The Sorcerer King"
+        ],
+        "status": "ongoing",
+        "thumb_url": "ta-la-vua-phap-su-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a6",
+            "name": "Adventure",
+            "slug": "adventure"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-11T04:18:36.019Z",
+        "chaptersLatest": [
+          {
+            "filename": "Ta Là Vua Pháp Sư [Chap 1-141]",
+            "chapter_name": "141",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6575dbd1a7b870682dc50e2b"
+          }
+        ]
+      },
+      {
+        "_id": "6575657910dc9c0a7e2d9f5f",
+        "name": "Thiên thần rớt xuống nhà tui",
+        "slug": "thien-than-rot-xuong-nha-tui",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "thien-than-rot-xuong-nha-tui-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4f4",
+            "name": "Shoujo Ai",
+            "slug": "shoujo-ai"
+          },
+          {
+            "id": "6508654a05d5791ad671a4fa",
+            "name": "Slice of Life",
+            "slug": "slice-of-life"
+          }
+        ],
+        "updatedAt": "2023-12-10T07:59:23.610Z",
+        "chaptersLatest": [
+          {
+            "filename": "Thiên thần rớt xuống nhà tui [Chap 1-68]",
+            "chapter_name": "68",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65756beaa7b870682dc4aecc"
+          }
+        ]
+      },
+      {
+        "_id": "6572a61a68e54cf5b50845b5",
+        "name": "Detchiage - Thầy Giáo Sát Nhân",
+        "slug": "detchiage-thay-giao-sat-nhan",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "detchiage-thay-giao-sat-nhan-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a3",
+            "name": "Adult",
+            "slug": "adult"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4be",
+            "name": "Drama",
+            "slug": "drama"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654905d5791ad671a4e8",
+            "name": "Psychological",
+            "slug": "psychological"
+          },
+          {
+            "id": "6508654905d5791ad671a4ec",
+            "name": "School Life",
+            "slug": "school-life"
+          },
+          {
+            "id": "6508654905d5791ad671a4f0",
+            "name": "Seinen",
+            "slug": "seinen"
+          },
+          {
+            "id": "6508654a05d5791ad671a50a",
+            "name": "Tragedy",
+            "slug": "tragedy"
+          }
+        ],
+        "updatedAt": "2023-12-08T12:50:14.500Z",
+        "chaptersLatest": [
+          {
+            "filename": "Detchiage - Thầy Giáo Sát Nhân [Chap 1-9]",
+            "chapter_name": "9",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6572a2dee120ddf219877e16"
+          }
+        ]
+      },
+      {
+        "_id": "657128b768e54cf5b5083da6",
+        "name": "Phát ảnh từ thiện",
+        "slug": "phat-anh-tu-thien",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "phat-anh-tu-thien-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          }
+        ],
+        "updatedAt": "2023-12-07T04:36:40.171Z",
+        "chaptersLatest": [
+          {
+            "filename": "Phát ảnh từ thiện [Chap 1-3]",
+            "chapter_name": "3",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65714181a7b870682dc33713"
+          }
+        ]
+      },
+      {
+        "_id": "657127e868e54cf5b5083cad",
+        "name": "Thịnh Thế Hoa Sủng: Tôi Bị Bắt Làm Tù Binh",
+        "slug": "thinh-the-hoa-sung-toi-bi-bat-lam-tu-binh",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "thinh-the-hoa-sung-toi-bi-bat-lam-tu-binh-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4ac",
+            "name": "Chuyển Sinh",
+            "slug": "chuyen-sinh"
+          },
+          {
+            "id": "6508654905d5791ad671a4e4",
+            "name": "Ngôn Tình",
+            "slug": "ngon-tinh"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-07T04:59:27.800Z",
+        "chaptersLatest": [
+          {
+            "filename": "Thịnh Thế Hoa Sủng Tôi Bị Bắt Làm Tù Binh [Chap 1-32]",
+            "chapter_name": "32",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65714794e120ddf21987554f"
+          }
+        ]
+      },
+      {
+        "_id": "6571279a68e54cf5b5083c52",
+        "name": "Người Ở Rể Mạnh Nhất",
+        "slug": "nguoi-o-re-manh-nhat",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "nguoi-o-re-manh-nhat-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-07T05:32:24.996Z",
+        "chaptersLatest": [
+          {
+            "filename": "Người Ở Rể Mạnh Nhất [Chap 1-42]",
+            "chapter_name": "42",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65714084e120ddf219874878"
+          }
+        ]
+      },
+      {
+        "_id": "656fe15b10dc9c0a7e2d7933",
+        "name": "Thất kiếm anh hùng",
+        "slug": "that-kiem-anh-hung",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "that-kiem-anh-hung-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4b8",
+            "name": "Cổ Đại",
+            "slug": "co-dai"
+          },
+          {
+            "id": "6508654905d5791ad671a4b2",
+            "name": "Comic",
+            "slug": "comic"
+          },
+          {
+            "id": "6508654905d5791ad671a4c7",
+            "name": "Fantasy",
+            "slug": "fantasy"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-06T10:51:36.956Z",
+        "chaptersLatest": [
+          {
+            "filename": "Thất kiếm anh hùng [Chap 1-3]",
+            "chapter_name": "3",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65700ad4e120ddf21986f529"
+          }
+        ]
+      },
+      {
+        "_id": "65693c2968e54cf5b5081a1d",
+        "name": "Nam Thần Baby Nhanh Vào Chén",
+        "slug": "nam-than-baby-nhanh-vao-chen",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "nam-than-baby-nhanh-vao-chen-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4be",
+            "name": "Drama",
+            "slug": "drama"
+          },
+          {
+            "id": "6508654905d5791ad671a4d8",
+            "name": "Manhua",
+            "slug": "manhua"
+          },
+          {
+            "id": "6508654905d5791ad671a4ea",
+            "name": "Romance",
+            "slug": "romance"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-12-06T03:18:06.336Z",
+        "chaptersLatest": [
+          {
+            "filename": "Nam Thần Baby Nhanh Vào Chén [Chap 0-0]",
+            "chapter_name": "0",
+            "chapter_title": "cũng có lúc lỡ tay tạo ra tiểu bảo bảo dễ thương như vậy",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/656f07b0e120ddf21986a1f8"
+          }
+        ]
+      },
+      {
+        "_id": "65680bda10dc9c0a7e2d5a03",
+        "name": "Linh Sủng Manh Thê Giá Đáo",
+        "slug": "linh-sung-manh-the-gia-dao",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "linh-sung-manh-the-gia-dao-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4ac",
+            "name": "Chuyển Sinh",
+            "slug": "chuyen-sinh"
+          },
+          {
+            "id": "6508654905d5791ad671a4e4",
+            "name": "Ngôn Tình",
+            "slug": "ngon-tinh"
+          }
+        ],
+        "updatedAt": "2023-11-30T05:02:33.979Z",
+        "chaptersLatest": [
+          {
+            "filename": "Linh Sủng Manh Thê Giá Đáo [Chap 1-7]",
+            "chapter_name": "7",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/6566bc31e120ddf2198594bf"
+          }
+        ]
+      },
+      {
+        "_id": "6566b26768e54cf5b5080ab4",
+        "name": "Lá chắn mắt",
+        "slug": "la-chan-mat",
+        "origin_name": [
+          "Eyeshield 21"
+        ],
+        "status": "ongoing",
+        "thumb_url": "la-chan-mat-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a491",
+            "name": "Action",
+            "slug": "action"
+          },
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4af",
+            "name": "Comedy",
+            "slug": "comedy"
+          },
+          {
+            "id": "6508654905d5791ad671a4be",
+            "name": "Drama",
+            "slug": "drama"
+          },
+          {
+            "id": "6508654905d5791ad671a4ec",
+            "name": "School Life",
+            "slug": "school-life"
+          },
+          {
+            "id": "6508654905d5791ad671a4f6",
+            "name": "Shounen",
+            "slug": "shounen"
+          },
+          {
+            "id": "6508654a05d5791ad671a502",
+            "name": "Sports",
+            "slug": "sports"
+          }
+        ],
+        "updatedAt": "2023-11-29T04:06:51.413Z",
+        "chaptersLatest": [
+          {
+            "filename": "Lá chắn mắt [Chap 0-333]",
+            "chapter_name": "333",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/65656eeea7b870682dc13236"
+          }
+        ]
+      },
+      {
+        "_id": "65655d3168e54cf5b507feb7",
+        "name": "Lylun Eye",
+        "slug": "lylun-eye",
+        "origin_name": [
+          ""
+        ],
+        "status": "ongoing",
+        "thumb_url": "lylun-eye-thumb.jpg",
+        "sub_docquyen": false,
+        "category": [
+          {
+            "id": "6508654905d5791ad671a4a9",
+            "name": "Anime",
+            "slug": "anime"
+          },
+          {
+            "id": "6508654905d5791ad671a4b2",
+            "name": "Comic",
+            "slug": "comic"
+          },
+          {
+            "id": "6508654905d5791ad671a4d0",
+            "name": "Horror",
+            "slug": "horror"
+          },
+          {
+            "id": "6508654905d5791ad671a4d6",
+            "name": "Manga",
+            "slug": "manga"
+          },
+          {
+            "id": "6508654a05d5791ad671a510",
+            "name": "Truyện Màu",
+            "slug": "truyen-mau"
+          }
+        ],
+        "updatedAt": "2023-11-28T13:21:04.426Z",
+        "chaptersLatest": [
+          {
+            "filename": "Lylun Eye [Chap 1-3]",
+            "chapter_name": "3",
+            "chapter_title": "",
+            "chapter_api_data": "https://sv1.otruyencdn.com/v1/api/chapter/656310cda7b870682dc0db12"
+          }
+        ]
+      }
+    ],
+    "params": {
+      "type_slug": "the-loai",
+      "slug": "anime",
+      "filterCategory": [
+        "anime"
+      ],
+      "sortField": "_id",
+      "sortType": "desc",
+      "pagination": {
+        "totalItems": 90,
+        "totalItemsPerPage": 24,
+        "currentPage": 1,
+        "pageRanges": 5
+      }
+    },
+    "type_list": "anime",
+    "APP_DOMAIN_FRONTEND": "https://otruyen.cc",
+    "APP_DOMAIN_CDN_IMAGE": "https://img.otruyenapi.com"
+  }
+}

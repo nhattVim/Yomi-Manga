@@ -111,7 +111,7 @@ fun MangaDetailScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 
-                                manga.author?.let {
+                                manga.authorName?.let {
                                     Text(
                                         text = "Tác giả: $it",
                                         style = MaterialTheme.typography.bodyMedium
@@ -121,13 +121,6 @@ fun MangaDetailScreen(
                                 manga.status?.let {
                                     Text(
                                         text = "Trạng thái: $it",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                
-                                manga.rating?.let {
-                                    Text(
-                                        text = "Đánh giá: $it",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
@@ -182,17 +175,23 @@ fun MangaDetailScreen(
                         )
                     }
                     
-                    items(manga.chapters ?: emptyList()) { chapter ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onChapterClick(chapter.id) }
-                        ) {
-                            Text(
-                                text = chapter.title,
-                                modifier = Modifier.padding(16.dp),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                    manga.chapters?.flatMap { server ->
+                        server.serverData
+                    }?.forEach { chapterData ->
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        onChapterClick(chapterData.chapterApiData)
+                                    }
+                            ) {
+                                Text(
+                                    text = chapterData.filename,
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
                         }
                     }
                 }
