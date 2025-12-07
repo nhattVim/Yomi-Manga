@@ -12,7 +12,7 @@ sealed class BottomNavItem(
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     object Home : BottomNavItem("home", "Trang chủ", Icons.Default.Home)
-    object Explore : BottomNavItem("explore", "Khám phá", Icons.Default.Search)
+    object Explore : BottomNavItem("explore", "Khám phá", Icons.Default.Explore)
     object Library : BottomNavItem("library", "Tủ sách", Icons.Default.Bookmarks)
     object Settings : BottomNavItem("settings", "Cài đặt", Icons.Default.Settings)
 }

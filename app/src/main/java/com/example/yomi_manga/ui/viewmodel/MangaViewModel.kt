@@ -2,8 +2,8 @@ package com.example.yomi_manga.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yomi_manga.core.constants.AppConstants
 import com.example.yomi_manga.core.error.AppError
+import com.example.yomi_manga.data.model.Category
 import com.example.yomi_manga.data.model.Manga
 import com.example.yomi_manga.di.AppContainer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,8 @@ data class MangaUiState(
     val mangaList: List<Manga> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val selectedManga: Manga? = null
+    val selectedManga: Manga? = null,
+    val categories: List<Category> = emptyList()
 ) {
     companion object {
         fun initial() = MangaUiState()
@@ -33,10 +34,10 @@ class MangaViewModel(
         loadHomeManga()
     }
     
-    fun loadMangaList(page: Int = 1) {
+    fun loadMangaList(slug: String, page: Int = 1) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getMangaList(page).fold(
+            repository.getMangaList(slug, page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
                         mangaList = mangaList,
@@ -101,7 +102,7 @@ class MangaViewModel(
     
     fun searchManga(query: String) {
         if (query.isBlank()) {
-            loadMangaList()
+            loadMangaList(slug = "truyen-moi")
             return
         }
         
@@ -126,10 +127,28 @@ class MangaViewModel(
         }
     }
     
-    fun loadPopularManga(page: Int = 1) {
+    fun loadCategories() {
+        viewModelScope.launch {
+            repository.getCategoryList().fold(
+                onSuccess = { categories ->
+                    _uiState.value = _uiState.value.copy(
+                        categories = categories
+                    )
+                },
+                onFailure = { throwable ->
+                    val appError = AppError.fromThrowable(throwable)
+                     _uiState.value = _uiState.value.copy(
+                         error = "Failed to load categories: ${appError.message}"
+                     )
+                }
+            )
+        }
+    }
+
+    fun loadMangaByCategory(slug: String, page: Int = 1) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getPopularManga(page).fold(
+            repository.getMangaByCategory(slug, page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
                         mangaList = mangaList,
@@ -152,4 +171,3 @@ class MangaViewModel(
         _uiState.value = _uiState.value.copy(error = null)
     }
 }
-

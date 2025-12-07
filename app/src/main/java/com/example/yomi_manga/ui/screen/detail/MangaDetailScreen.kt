@@ -3,7 +3,6 @@ package com.example.yomi_manga.ui.screen.detail
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -187,7 +186,7 @@ fun MangaDetailScreen(
                                     }
                             ) {
                                 Text(
-                                    text = chapterData.filename,
+                                    text = "Chapter " + chapterData.chapterName,
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.bodyLarge
                                 )

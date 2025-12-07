@@ -2,6 +2,15 @@ package com.example.yomi_manga.data.model
 
 import com.google.gson.annotations.SerializedName
 
+data class ApiResponse<T>(
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("data")
+    val data: T? = null
+)
+
 data class Category(
     @SerializedName("id")
     val id: String,
@@ -9,6 +18,11 @@ data class Category(
     val name: String,
     @SerializedName("slug")
     val slug: String
+)
+
+data class CategoryListData(
+    @SerializedName("items")
+    val items: List<Category>? = null,
 )
 
 data class ChapterLatest(
@@ -74,15 +88,6 @@ data class Manga(
     val genres: List<String>? get() = category?.map { it.name }
     val authorName: String? get() = author?.joinToString(", ")
 }
-
-data class ApiResponse<T>(
-    @SerializedName("status")
-    val status: String,
-    @SerializedName("message")
-    val message: String? = null,
-    @SerializedName("data")
-    val data: T? = null
-)
 
 data class MangaListData(
     @SerializedName("items")
@@ -180,3 +185,4 @@ data class ChapterImage(
 
 typealias MangaListResponse = ApiResponse<MangaListData>
 typealias MangaDetailResponse = ApiResponse<MangaDetailData>
+typealias CategoryListRespone = ApiResponse<CategoryListData>

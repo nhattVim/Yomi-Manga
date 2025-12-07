@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.yomi_manga.data.model.Category
 import com.example.yomi_manga.ui.components.MangaCard
 import com.example.yomi_manga.ui.viewmodel.MangaViewModel
 
@@ -20,11 +21,12 @@ fun ExploreScreen(
     onMangaClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     LaunchedEffect(Unit) {
-        viewModel.loadPopularManga()
+        viewModel.loadCategories()
+        viewModel.loadMangaList(slug = "truyen-moi")
     }
-    
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -35,35 +37,44 @@ fun ExploreScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
         ) {
-            var selectedTab by remember { mutableStateOf(0) }
-            val tabs = listOf("Phổ biến", "Mới nhất", "Đánh giá cao")
-            
+            var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+            val staticTabs = remember {
+                listOf(
+                    Category(id = "latest", name = "Mới nhất", slug = "truyen-moi")
+                )
+            }
+
+            val tabs = remember(uiState.categories) {
+                staticTabs + uiState.categories
+            }
+
             ScrollableTabRow(
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = selectedTabIndex,
+                edgePadding = 16.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                tabs.forEachIndexed { index, title ->
+                tabs.forEachIndexed { index, category ->
                     Tab(
-                        selected = selectedTab == index,
+                        selected = selectedTabIndex == index,
                         onClick = {
-                            selectedTab = index
-                            when (index) {
-                                0 -> viewModel.loadPopularManga()
-                                1 -> viewModel.loadMangaList()
-                                2 -> viewModel.loadPopularManga()
+                            selectedTabIndex = index
+                            when (category.id) {
+                                "latest" -> viewModel.loadMangaList(category.slug)
+                                else -> viewModel.loadMangaByCategory(category.slug)
                             }
                         },
-                        text = { Text(title) }
+                        text = { Text(category.name) }
                     )
                 }
             }
-            
+
             when {
                 uiState.isLoading -> {
                     Box(
@@ -73,6 +84,7 @@ fun ExploreScreen(
                         CircularProgressIndicator()
                     }
                 }
+
                 uiState.error != null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -86,11 +98,15 @@ fun ExploreScreen(
                                 text = "Lỗi: ${uiState.error}",
                                 color = MaterialTheme.colorScheme.error
                             )
-                            Button(onClick = { 
-                                when (selectedTab) {
-                                    0 -> viewModel.loadPopularManga()
-                                    1 -> viewModel.loadMangaList()
-                                    else -> viewModel.loadPopularManga()
+                            Button(onClick = {
+                                if (selectedTabIndex < tabs.size) {
+                                    val category = tabs[selectedTabIndex]
+                                    when (category.id) {
+                                        "latest" -> viewModel.loadMangaList(category.slug)
+                                        else -> viewModel.loadMangaByCategory(category.slug)
+                                    }
+                                } else {
+                                    viewModel.loadMangaList(slug = "truyen-moi")
                                 }
                             }) {
                                 Text("Thử lại")
@@ -98,6 +114,7 @@ fun ExploreScreen(
                         }
                     }
                 }
+
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
@@ -117,4 +134,3 @@ fun ExploreScreen(
         }
     }
 }
-
