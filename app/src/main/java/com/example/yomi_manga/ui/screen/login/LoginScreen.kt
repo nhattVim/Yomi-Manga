@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.yomi_manga.ui.screen.login
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,12 +18,10 @@ import com.example.yomi_manga.util.FirebaseConfig
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 
-@Suppress("DEPRECATION")
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
@@ -167,8 +167,10 @@ fun LoginScreen(
         Button(
             onClick = {
                 if (googleSignInClient != null) {
-                    val signInIntent = googleSignInClient.signInIntent
-                    launcher.launch(signInIntent)
+                    googleSignInClient.signOut().addOnCompleteListener {
+                        val signInIntent = googleSignInClient.signInIntent
+                        launcher.launch(signInIntent)
+                    }
                 } else {
                     viewModel.setError("Không thể khởi tạo Google Sign-In. Vui lòng kiểm tra cấu hình.")
                 }
@@ -193,7 +195,6 @@ fun LoginScreen(
     }
 }
 
-@Suppress("DEPRECATION")
 fun handleSignInResult(
     completedTask: Task<GoogleSignInAccount>,
     onResult: (String?) -> Unit
@@ -215,4 +216,3 @@ fun handleSignInResult(
         onResult(null)
     }
 }
-
