@@ -5,28 +5,24 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
@@ -34,6 +30,7 @@ import com.example.yomi_manga.data.model.ChapterData
 import com.example.yomi_manga.data.model.Manga
 import com.example.yomi_manga.di.AppContainer
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +41,9 @@ fun ReaderScreen(
     onChapterChange: (String) -> Unit = {}
 ) {
     val repository = AppContainer.mangaRepository
+    val context = LocalContext.current
+    val downloadRepository = remember { AppContainer.provideDownloadRepository(context) }
+
     val images = remember { mutableStateListOf<String>() }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -54,9 +54,10 @@ fun ReaderScreen(
     var manga by remember { mutableStateOf<Manga?>(null) }
     var showChapterList by remember { mutableStateOf(false) }
     var currentChapterUrl by remember { mutableStateOf(chapterId) }
+    var isDownloaded by remember { mutableStateOf(false) }
     
     val allChapters = remember(manga) {
-        manga?.chapters?.flatMap { server -> server.serverData } ?: emptyList()
+        manga?.chapters?.flatMap { server -> server.items } ?: emptyList()
     }
     
     val currentChapterIndex = remember(allChapters, currentChapterUrl) {
@@ -77,11 +78,23 @@ fun ReaderScreen(
     
     LaunchedEffect(mangaSlug) {
         if (mangaSlug != null) {
+            // First check if it's downloaded
+            val mangaId = mangaSlug // Assuming slug is ID or we can find by ID. 
+            // Wait, if coming from Storage, mangaSlug might be mangaId.
+            // If coming from API, mangaSlug is slug.
+            
+            // Try to load online first, if fails try offline?
+            // Actually request is "if downloaded, read offline".
+            // We should check if chapter is downloaded.
+            
             repository.getMangaDetail(mangaSlug).fold(
                 onSuccess = { mangaDetail ->
                     manga = mangaDetail
                 },
-                onFailure = { }
+                onFailure = { 
+                    // If online fetch fails, maybe we can construct minimal manga info from DB if needed?
+                    // For now, let's proceed.
+                }
             )
         }
     }
@@ -89,27 +102,19 @@ fun ReaderScreen(
     LaunchedEffect(currentChapterUrl) {
         isLoading = true
         error = null
-        repository.getChapterImages(currentChapterUrl).fold(
-            onSuccess = { imageList ->
-                images.clear()
-                images.addAll(imageList)
-                isLoading = false
-            },
-            onFailure = { throwable ->
-                error = throwable.message
-                isLoading = false
-            }
-        )
-    }
-    
-    fun loadChapterImages() {
-        coroutineScope.launch {
-            isLoading = true
-            error = null
-            repository.getChapterImages(currentChapterUrl).fold(
+        images.clear()
+        
+        // Check if downloaded
+        val downloadedChapter = downloadRepository.getDownloadedChapter(currentChapterUrl)
+        if (downloadedChapter != null) {
+            isDownloaded = true
+            images.addAll(downloadedChapter.imagePaths)
+            isLoading = false
+        } else {
+            isDownloaded = false
+            repository.getChapterPages(currentChapterUrl).fold(
                 onSuccess = { imageList ->
-                    images.clear()
-                    images.addAll(imageList)
+                    images.addAll(imageList.map { it.imageFile })
                     isLoading = false
                 },
                 onFailure = { throwable ->
@@ -117,6 +122,33 @@ fun ReaderScreen(
                     isLoading = false
                 }
             )
+        }
+    }
+    
+    fun loadChapterImages() {
+        coroutineScope.launch {
+            isLoading = true
+            error = null
+            images.clear()
+            
+            val downloadedChapter = downloadRepository.getDownloadedChapter(currentChapterUrl)
+            if (downloadedChapter != null) {
+                isDownloaded = true
+                images.addAll(downloadedChapter.imagePaths)
+                isLoading = false
+            } else {
+                isDownloaded = false
+                repository.getChapterPages(currentChapterUrl).fold(
+                    onSuccess = { imageList ->
+                        images.addAll(imageList.map { it.imageFile })
+                        isLoading = false
+                    },
+                    onFailure = { throwable ->
+                        error = throwable.message
+                        isLoading = false
+                    }
+                )
+            }
         }
     }
     
@@ -190,8 +222,14 @@ fun ReaderScreen(
                         items = images,
                         key = { it }
                     ) { imageUrl ->
+                        // If downloaded, imageUrl is a local path.
+                        // Coil handles file paths automatically if we pass File object or valid path string?
+                        // Coil handles "file:///..." or absolute path.
+
+                        val model = if (isDownloaded) File(imageUrl) else imageUrl
+                        
                         SubcomposeAsyncImage(
-                            model = imageUrl,
+                            model = model,
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -257,7 +295,7 @@ fun ReaderScreen(
                         enabled = allChapters.isNotEmpty()
                     ) {
                         Icon(
-                            imageVector = Icons.Default.List,
+                            imageVector = Icons.AutoMirrored.Filled.List,
                             contentDescription = "Danh sách chapter"
                         )
                     }
@@ -266,7 +304,7 @@ fun ReaderScreen(
                         enabled = hasPreviousChapter
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBackIos,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                             contentDescription = "Chapter trước"
                         )
                     }
@@ -275,7 +313,7 @@ fun ReaderScreen(
                         enabled = hasNextChapter
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowForwardIos,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                             contentDescription = "Chapter sau"
                         )
                     }
@@ -362,4 +400,3 @@ fun ChapterListBottomSheet(
         }
     }
 }
-

@@ -1,22 +1,53 @@
 package com.example.yomi_manga.ui.screen.detail
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.DownloadForOffline
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.yomi_manga.di.AppContainer
 import com.example.yomi_manga.ui.viewmodel.MangaViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MangaDetailScreen(
     mangaId: String,
@@ -25,7 +56,13 @@ fun MangaDetailScreen(
     onChapterClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
+    LaunchedEffect(Unit) {
+        val repo = AppContainer.provideDownloadRepository(context)
+        viewModel.setDownloadRepository(repo)
+    }
+
     LaunchedEffect(mangaId) {
         viewModel.loadMangaDetail(mangaId)
     }
@@ -43,6 +80,9 @@ fun MangaDetailScreen(
                     }
                 }
             )
+        },
+        snackbarHost = {
+             // Custom Snackbar handling if needed, or stick to Scaffold's default if we passed SnackbarHostState
         }
     ) { paddingValues ->
         when {
@@ -167,17 +207,40 @@ fun MangaDetailScreen(
                     }
                     
                     item {
-                        Text(
-                            text = "Danh sách chương",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Danh sách chương",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            // Nút Tải tất cả
+                            IconButton(
+                                onClick = {
+                                    val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
+                                    viewModel.downloadAllChapters(allChapters)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DownloadForOffline,
+                                    contentDescription = "Tải tất cả",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                     
                     manga.chapters?.flatMap { server ->
-                        server.serverData
+                        server.items
                     }?.forEach { chapterData ->
                         item {
+                            val isDownloaded = uiState.downloadedChapters.contains(chapterData.chapterApiData)
+                            val isDownloading = uiState.downloadingChapterIds.contains(chapterData.chapterApiData)
+
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -185,12 +248,61 @@ fun MangaDetailScreen(
                                         onChapterClick(chapterData.chapterApiData)
                                     }
                             ) {
-                                Text(
-                                    text = "Chapter " + chapterData.chapterName,
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Chapter " + chapterData.chapterName,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    
+                                    if (isDownloading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        IconButton(
+                                            onClick = {
+                                                if (!isDownloaded) {
+                                                    viewModel.downloadChapter(
+                                                        mangaId = manga.id ?: "",
+                                                        chapterApiData = chapterData.chapterApiData,
+                                                        chapterTitle = chapterData.chapterName,
+                                                        chapterNumber = chapterData.chapterName.toFloatOrNull() ?: 0f
+                                                    )
+                                                }
+                                            },
+                                            enabled = !isDownloaded
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isDownloaded) Icons.Default.DownloadDone else Icons.Default.Download,
+                                                contentDescription = if (isDownloaded) "Downloaded" else "Download",
+                                                tint = if (isDownloaded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
                             }
+                        }
+                    }
+                }
+                
+                if (uiState.downloadMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 32.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Snackbar(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(text = uiState.downloadMessage ?: "")
                         }
                     }
                 }
@@ -198,4 +310,3 @@ fun MangaDetailScreen(
         }
     }
 }
-

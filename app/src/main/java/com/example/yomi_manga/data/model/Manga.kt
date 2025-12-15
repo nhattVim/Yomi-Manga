@@ -47,11 +47,11 @@ data class ChapterData(
     val chapterApiData: String
 )
 
-data class ChapterServer(
+data class ChapterListData(
     @SerializedName("server_name")
     val serverName: String,
     @SerializedName("server_data")
-    val serverData: List<ChapterData>
+    val items: List<ChapterData>
 )
 
 data class Manga(
@@ -80,7 +80,7 @@ data class Manga(
     @SerializedName("chaptersLatest")
     val chaptersLatest: List<ChapterLatest>? = null,
     @SerializedName("chapters")
-    val chapters: List<ChapterServer>? = null
+    val chapters: List<ChapterListData>? = null
 ) {
     val title: String get() = name
     val cover: String? get() = thumbUrl?.let { "https://img.otruyenapi.com/uploads/comics/$it" }

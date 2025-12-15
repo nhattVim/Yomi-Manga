@@ -22,6 +22,7 @@ import com.example.yomi_manga.ui.screen.library.LibraryScreen
 import com.example.yomi_manga.ui.screen.login.LoginScreen
 import com.example.yomi_manga.ui.screen.reader.ReaderScreen
 import com.example.yomi_manga.ui.screen.settings.SettingsScreen
+import com.example.yomi_manga.ui.screen.settings.StorageScreen
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
 
 sealed class Screen(val route: String) {
@@ -30,6 +31,7 @@ sealed class Screen(val route: String) {
     object Explore : Screen("explore")
     object Library : Screen("library")
     object Settings : Screen("settings")
+    object Storage : Screen("storage")
     object Detail : Screen("detail/{${AppConstants.NAV_ARG_MANGA_ID}}") {
         fun createRoute(mangaId: String) = "detail/$mangaId"
     }
@@ -136,9 +138,22 @@ fun NavGraph(
                         navController.navigate(Screen.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onStorageClick = {
+                        navController.navigate(Screen.Storage.route)
                     }
                 )
             }
+        }
+
+        composable(Screen.Storage.route) {
+            StorageScreen(
+                onBackClick = { navController.popBackStack() },
+                onChapterClick = { chapterId, mangaId ->
+                     val encodedUrl = Base64.encodeToString(chapterId.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+                     navController.navigate(Screen.Reader.createRoute(encodedUrl, mangaId))
+                }
+            )
         }
         
         composable(Screen.Detail.route) { backStackEntry ->
@@ -204,4 +219,3 @@ fun MainScreenWrapper(
         }
     }
 }
-
