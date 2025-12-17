@@ -1,19 +1,42 @@
 package com.example.yomi_manga.ui.screen.home
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -78,11 +101,7 @@ fun HomeScreen(
                 value = searchQuery,
                 onValueChange = { query ->
                     searchQuery = query
-                    if (query.isBlank()) {
-                        viewModel.loadHomeManga()
-                    } else {
-                        viewModel.searchManga(query)
-                    }
+                    viewModel.searchManga(query)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,10 +157,40 @@ fun HomeScreen(
                                 onClick = { onMangaClick(manga.slug) }
                             )
                         }
+                        
+                        // Add pagination as a footer item
+                        if (uiState.mangaList.isNotEmpty()) {
+                             item(span = { GridItemSpan(2) }) { // Span across all columns
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = { viewModel.loadPreviousPage() },
+                                        enabled = uiState.currentPage > 1
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Page")
+                                    }
+                                    
+                                    Text(
+                                        text = "Trang ${uiState.currentPage}",
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                    
+                                    IconButton(
+                                        onClick = { viewModel.loadNextPage() }
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Page")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-

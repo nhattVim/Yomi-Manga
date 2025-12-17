@@ -5,16 +5,6 @@ data class User(
     val email: String = "",
     val displayName: String = "",
     val photoUrl: String = "",
-    val createdAt: Long = System.currentTimeMillis(),
-    val favoriteManga: List<String> = emptyList(),
-    val readingHistory: List<ReadingHistory> = emptyList()
+    val createdAt: Long = System.currentTimeMillis()
+    // Removed favoriteManga and readingHistory lists as we now use sub-collections for scalability
 )
-
-data class ReadingHistory(
-    val mangaId: String = "",
-    val mangaTitle: String = "",
-    val chapterId: String = "",
-    val chapterTitle: String = "",
-    val lastReadAt: Long = System.currentTimeMillis()
-)
-

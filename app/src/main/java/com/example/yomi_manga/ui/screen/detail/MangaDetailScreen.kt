@@ -1,41 +1,19 @@
 package com.example.yomi_manga.ui.screen.detail
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.DownloadForOffline
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -46,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.yomi_manga.di.AppContainer
 import com.example.yomi_manga.ui.viewmodel.MangaViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -57,7 +36,9 @@ fun MangaDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         val repo = AppContainer.provideDownloadRepository(context)
         viewModel.setDownloadRepository(repo)
@@ -66,7 +47,7 @@ fun MangaDetailScreen(
     LaunchedEffect(mangaId) {
         viewModel.loadMangaDetail(mangaId)
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,11 +59,58 @@ fun MangaDetailScreen(
                             contentDescription = "Back"
                         )
                     }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.toggleFavorite() }) {
+                        Icon(
+                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            tint = if (uiState.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             )
         },
+        floatingActionButton = {
+            if (uiState.lastReadChapterId != null) {
+                FloatingActionButton(
+                    onClick = {
+                        val manga = uiState.selectedManga
+                        if (manga != null) {
+                            val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
+                            val index =
+                                allChapters.indexOfFirst { it.chapterApiData == uiState.lastReadChapterId }
+                            if (index != -1) {
+                                // Add 3 to index because of the header items (Cover/Info, Description, Genres)
+                                // This is an approximation since header items can be variable.
+                                // Better way: Find index in the combined list if using a single list, or use sticky headers.
+                                // Since we use item {} blocks before chapters, we need to offset.
+                                // Let's count items: 
+                                // 1. Header (Info)
+                                // 2. Description
+                                // 3. Genres (if exists)
+                                // 4. Chapter List Header
+                                // 5. Empty msg (if empty)
+                                // OR Chapters...
+
+                                var offset = 3 // Header + Description + Chapter List Header
+                                if (manga.genres?.isNotEmpty() == true) {
+                                    offset += 1
+                                }
+
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(index + offset)
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.History, contentDescription = "Go to Last Read")
+                }
+            }
+        },
         snackbarHost = {
-             // Custom Snackbar handling if needed, or stick to Scaffold's default if we passed SnackbarHostState
+            // Custom Snackbar handling if needed, or stick to Scaffold's default if we passed SnackbarHostState
         }
     ) { paddingValues ->
         when {
@@ -96,6 +124,7 @@ fun MangaDetailScreen(
                     CircularProgressIndicator()
                 }
             }
+
             uiState.error != null -> {
                 Box(
                     modifier = Modifier
@@ -117,9 +146,11 @@ fun MangaDetailScreen(
                     }
                 }
             }
+
             uiState.selectedManga != null -> {
                 val manga = uiState.selectedManga!!
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
@@ -139,7 +170,7 @@ fun MangaDetailScreen(
                                     .height(180.dp),
                                 contentScale = ContentScale.Crop
                             )
-                            
+
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -149,14 +180,14 @@ fun MangaDetailScreen(
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold
                                 )
-                                
+
                                 manga.authorName?.let {
                                     Text(
                                         text = "Tác giả: $it",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
-                                
+
                                 manga.status?.let {
                                     Text(
                                         text = "Trạng thái: $it",
@@ -166,7 +197,7 @@ fun MangaDetailScreen(
                             }
                         }
                     }
-                    
+
                     item {
                         manga.description?.let {
                             Text(
@@ -180,32 +211,32 @@ fun MangaDetailScreen(
                             )
                         }
                     }
-                    
-                    item {
-                        manga.genres?.let { genres ->
-                            if (genres.isNotEmpty()) {
-                                Text(
-                                    text = "Thể loại",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    genres.forEach { genre ->
-                                        FilterChip(
-                                            selected = false,
-                                            onClick = { },
-                                            label = { Text(genre) }
-                                        )
-                                    }
+
+                    if (manga.genres?.isNotEmpty() == true) {
+                        item {
+                            Text(
+                                text = "Thể loại",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                manga.genres!!.forEach { genre ->
+                                    FilterChip(
+                                        selected = false,
+                                        onClick = { },
+                                        label = { Text(genre) }
+                                    )
                                 }
                             }
                         }
                     }
-                    
+
+                    val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
+
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -218,72 +249,114 @@ fun MangaDetailScreen(
                                 fontWeight = FontWeight.Bold
                             )
 
-                            // Nút Tải tất cả
-                            IconButton(
-                                onClick = {
-                                    val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
-                                    viewModel.downloadAllChapters(allChapters)
+                            if (allChapters.isNotEmpty()) {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.downloadAllChapters(allChapters)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DownloadForOffline,
+                                        contentDescription = "Tải tất cả",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DownloadForOffline,
-                                    contentDescription = "Tải tất cả",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
                             }
                         }
                     }
-                    
-                    manga.chapters?.flatMap { server ->
-                        server.items
-                    }?.forEach { chapterData ->
-                        item {
-                            val isDownloaded = uiState.downloadedChapters.contains(chapterData.chapterApiData)
-                            val isDownloading = uiState.downloadingChapterIds.contains(chapterData.chapterApiData)
 
-                            Card(
+                    if (allChapters.isEmpty()) {
+                        item {
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { 
-                                        onChapterClick(chapterData.chapterApiData)
-                                    }
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
+                                Text(
+                                    text = "Chưa có chap đang cập nhật",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        manga.chapters?.flatMap { server ->
+                            server.items
+                        }?.forEach { chapterData ->
+                            item {
+                                val isDownloaded =
+                                    uiState.downloadedChapters.contains(chapterData.chapterApiData)
+                                val isDownloading =
+                                    uiState.downloadingChapterIds.contains(chapterData.chapterApiData)
+                                val isLastRead =
+                                    uiState.lastReadChapterId == chapterData.chapterApiData
+
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Chapter " + chapterData.chapterName,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    
-                                    if (isDownloading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            strokeWidth = 2.dp
-                                        )
+                                        .clickable {
+                                            onChapterClick(chapterData.chapterApiData)
+                                        },
+                                    colors = if (isLastRead) {
+                                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                     } else {
-                                        IconButton(
-                                            onClick = {
-                                                if (!isDownloaded) {
+                                        CardDefaults.cardColors()
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Chapter " + chapterData.chapterName,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = if (isLastRead) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                            if (isLastRead) {
+                                                Text(
+                                                    text = "Đang đọc",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+
+                                        if (isDownloading) {
+                                            IconButton(
+                                                modifier = Modifier.size(42.dp),
+                                                onClick = {
+                                                    viewModel.cancelDownload(chapterData.chapterApiData)
+                                                },
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    strokeWidth = 2.dp
+                                                )
+                                            }
+                                        } else {
+                                            IconButton(
+                                                modifier = Modifier.size(42.dp),
+                                                onClick = {
                                                     viewModel.downloadChapter(
-                                                        mangaId = manga.id ?: "",
+                                                        mangaId = manga.id,
                                                         chapterApiData = chapterData.chapterApiData,
                                                         chapterTitle = chapterData.chapterName,
-                                                        chapterNumber = chapterData.chapterName.toFloatOrNull() ?: 0f
+                                                        chapterNumber = chapterData.chapterName.toFloatOrNull()
+                                                            ?: 0f
                                                     )
-                                                }
-                                            },
-                                            enabled = !isDownloaded
-                                        ) {
-                                            Icon(
-                                                imageVector = if (isDownloaded) Icons.Default.DownloadDone else Icons.Default.Download,
-                                                contentDescription = if (isDownloaded) "Downloaded" else "Download",
-                                                tint = if (isDownloaded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                            )
+                                                },
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isDownloaded) Icons.Default.DownloadDone else Icons.Default.Download,
+                                                    contentDescription = if (isDownloaded) "Downloaded" else "Download",
+                                                    tint = if (isDownloaded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -291,7 +364,7 @@ fun MangaDetailScreen(
                         }
                     }
                 }
-                
+
                 if (uiState.downloadMessage != null) {
                     Box(
                         modifier = Modifier

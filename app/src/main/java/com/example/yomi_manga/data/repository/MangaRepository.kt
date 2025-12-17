@@ -117,8 +117,8 @@ class MangaRepository {
                 // But wait, `getChapterPages` returns `Result<List<ChapterImage>>`?
                 // The `ChapterItem` logic `getImageUrls(domainCdn)` already constructs full URLs.
                 // So I should probably just return `List<String>` from here to keep it simple for ViewModel.
-                
-                val imageUrls = chapterItem?.getImageUrls(domainCdn) ?: emptyList()
+
+                chapterItem?.getImageUrls(domainCdn) ?: emptyList()
                 
                 // Return as ChapterImage with full URL in imageFile? 
                 // No, better to return List<String> or List<ChapterImage> where I can store full URL.

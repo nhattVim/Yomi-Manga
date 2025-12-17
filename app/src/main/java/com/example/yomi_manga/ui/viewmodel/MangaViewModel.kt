@@ -5,10 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.yomi_manga.core.error.AppError
 import com.example.yomi_manga.data.model.Category
 import com.example.yomi_manga.data.model.ChapterData
+import com.example.yomi_manga.data.model.FavoriteManga
 import com.example.yomi_manga.data.model.Manga
+import com.example.yomi_manga.data.model.ReadingHistory
 import com.example.yomi_manga.data.repository.DownloadRepository
+import com.example.yomi_manga.data.repository.LibraryRepository
 import com.example.yomi_manga.data.repository.MangaRepository
 import com.example.yomi_manga.di.AppContainer
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,9 +27,16 @@ data class MangaUiState(
     val selectedManga: Manga? = null,
     val categories: List<Category> = emptyList(),
     val downloadedChapters: Set<String> = emptySet(),
-    val downloadingChapterIds: Set<String> = emptySet(), // Track individual chapters downloading
+    val downloadingChapterIds: Set<String> = emptySet(),
     val downloadMessage: String? = null,
-    val downloadMessageId: Long = 0 // Used to trigger snackbar recomposition/show
+    val downloadMessageId: Long = 0,
+    val currentPage: Int = 1,
+    val totalPages: Int = 1,
+    val currentSlug: String = "truyen-moi",
+    val isCategory: Boolean = false,
+    val currentSearchQuery: String? = null,
+    val isFavorite: Boolean = false,
+    val lastReadChapterId: String? = null
 ) {
     companion object {
         fun initial() = MangaUiState()
@@ -34,7 +45,8 @@ data class MangaUiState(
 
 class MangaViewModel(
     private val repository: MangaRepository = AppContainer.mangaRepository,
-    private val downloadRepository: DownloadRepository? = null
+    private val downloadRepository: DownloadRepository? = null,
+    private val libraryRepository: LibraryRepository = AppContainer.libraryRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(MangaUiState())
@@ -45,15 +57,32 @@ class MangaViewModel(
 
     fun setDownloadRepository(repo: DownloadRepository) {
         _downloadRepository = repo
+        observeRunningDownloads()
     }
 
     init {
         loadHomeManga()
     }
     
+    private fun observeRunningDownloads() {
+        val repo = _downloadRepository ?: return
+        viewModelScope.launch {
+            repo.runningDownloads.collect { runningIds ->
+                _uiState.value = _uiState.value.copy(downloadingChapterIds = runningIds)
+            }
+        }
+    }
+    
     fun loadMangaList(slug: String, page: Int = 1) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                error = null,
+                currentSlug = slug,
+                currentPage = page,
+                isCategory = false,
+                currentSearchQuery = null
+            )
             repository.getMangaList(slug, page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
@@ -74,25 +103,7 @@ class MangaViewModel(
     }
     
     fun loadHomeManga() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.getHomeManga().fold(
-                onSuccess = { mangaList ->
-                    _uiState.value = _uiState.value.copy(
-                        mangaList = mangaList,
-                        isLoading = false,
-                        error = null
-                    )
-                },
-                onFailure = { throwable ->
-                    val appError = AppError.fromThrowable(throwable)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = appError.message
-                    )
-                }
-            )
-        }
+        loadMangaList("truyen-moi")
     }
     
     fun loadMangaDetail(slug: String) {
@@ -106,6 +117,8 @@ class MangaViewModel(
                         error = null
                     )
                     checkDownloadedChapters(manga.id ?: "")
+                    checkFavorite(manga.id ?: "")
+                    checkLastReadChapter(manga.id ?: "")
                 },
                 onFailure = { throwable ->
                     val appError = AppError.fromThrowable(throwable)
@@ -129,6 +142,74 @@ class MangaViewModel(
         }
     }
 
+    private fun checkFavorite(mangaId: String) {
+        viewModelScope.launch {
+            val isFav = libraryRepository.isFavorite(mangaId)
+            _uiState.value = _uiState.value.copy(isFavorite = isFav)
+        }
+    }
+
+    private fun checkLastReadChapter(mangaId: String) {
+        viewModelScope.launch {
+            val history = libraryRepository.getReadingHistoryForManga(mangaId)
+            _uiState.value = _uiState.value.copy(lastReadChapterId = history?.chapterId)
+        }
+    }
+
+    fun toggleFavorite() {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            showTemporaryMessage("Vui lòng đăng nhập để sử dụng tính năng này")
+            return
+        }
+        val manga = _uiState.value.selectedManga ?: return
+        val isFav = _uiState.value.isFavorite
+        val mangaId = manga.id ?: return
+
+        viewModelScope.launch {
+            try {
+                if (isFav) {
+                    libraryRepository.removeFavorite(mangaId)
+                    _uiState.value = _uiState.value.copy(isFavorite = false)
+                    showTemporaryMessage("Đã xóa khỏi yêu thích")
+                } else {
+                    val favoriteManga = FavoriteManga(
+                        mangaId = mangaId,
+                        title = manga.title,
+                        coverUrl = manga.cover ?: "",
+                        slug = manga.slug
+                    )
+                    libraryRepository.addFavorite(favoriteManga)
+                    _uiState.value = _uiState.value.copy(isFavorite = true)
+                    showTemporaryMessage("Đã thêm vào yêu thích")
+                }
+            } catch (e: Exception) {
+                showTemporaryMessage("Lỗi: ${e.message}")
+            }
+        }
+    }
+
+    fun saveReadingHistory(manga: Manga, chapterId: String, chapterTitle: String) {
+        if (FirebaseAuth.getInstance().currentUser == null) return
+
+        val mangaId = manga.id ?: return
+
+        viewModelScope.launch {
+            try {
+                val history = ReadingHistory(
+                    mangaId = mangaId,
+                    title = manga.title,
+                    coverUrl = manga.cover ?: "",
+                    slug = manga.slug,
+                    chapterId = chapterId,
+                    chapterTitle = chapterTitle
+                )
+                libraryRepository.addToHistory(history)
+            } catch (e: Exception) {
+                // Fail silently for history
+            }
+        }
+    }
+
     fun downloadChapter(mangaId: String, chapterApiData: String, chapterTitle: String, chapterNumber: Float) {
         val repo = _downloadRepository
         if (repo == null) {
@@ -140,16 +221,9 @@ class MangaViewModel(
 
         viewModelScope.launch {
             try {
-                // Add to downloading set
-                val currentDownloading = _uiState.value.downloadingChapterIds.toMutableSet()
-                currentDownloading.add(chapterApiData)
-                _uiState.value = _uiState.value.copy(downloadingChapterIds = currentDownloading)
-                
-                // We need the full manga object to save its details.
                 val manga = _uiState.value.selectedManga
                 if (manga == null) {
                     showTemporaryMessage("Manga details not loaded")
-                    removeFromDownloading(chapterApiData)
                     return@launch
                 }
 
@@ -164,18 +238,15 @@ class MangaViewModel(
                              chapterNumber = chapterNumber,
                              imageUrls = pages.map { it.imageFile }
                          )
-                         showTemporaryMessage("Đã tải xong: $chapterTitle")
-                         removeFromDownloading(chapterApiData)
+                         showTemporaryMessage("Đang tải: $chapterTitle")
                      },
                      onFailure = {
                          showTemporaryMessage("Lỗi tải $chapterTitle: ${it.message}")
-                         removeFromDownloading(chapterApiData)
                      }
                 )
 
             } catch (e: Exception) {
                 showTemporaryMessage("Lỗi: ${e.message}")
-                removeFromDownloading(chapterApiData)
             }
         }
     }
@@ -196,8 +267,6 @@ class MangaViewModel(
 
         showTemporaryMessage("Bắt đầu tải ${chaptersToDownload.size} chapter...")
 
-        // Launch downloads concurrently (or sequentially if you prefer loop)
-        // Since we are inside viewModelScope, these launches are children and run asynchronously
         chaptersToDownload.forEach { chapter ->
             downloadChapter(
                 mangaId = manga.id ?: "",
@@ -208,14 +277,13 @@ class MangaViewModel(
         }
     }
 
-    private fun removeFromDownloading(chapterId: String) {
-        val currentDownloading = _uiState.value.downloadingChapterIds.toMutableSet()
-        currentDownloading.remove(chapterId)
-        _uiState.value = _uiState.value.copy(downloadingChapterIds = currentDownloading)
+    fun cancelDownload(chapterApiData: String) {
+        val repo = _downloadRepository ?: return
+        repo.cancelDownload(chapterApiData)
+        showTemporaryMessage("Đã huỷ tải xuống")
     }
 
     private fun showTemporaryMessage(message: String) {
-        // Cancel previous clear job if exists
         messageJob?.cancel()
         
         _uiState.value = _uiState.value.copy(
@@ -229,15 +297,21 @@ class MangaViewModel(
         }
     }
     
-    fun searchManga(query: String) {
+    fun searchManga(query: String, page: Int = 1) {
         if (query.isBlank()) {
             loadMangaList(slug = "truyen-moi")
             return
         }
         
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.searchManga(query).fold(
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                error = null,
+                currentSearchQuery = query,
+                currentPage = page,
+                isCategory = false
+            )
+            repository.searchManga(query, page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
                         mangaList = mangaList,
@@ -276,7 +350,14 @@ class MangaViewModel(
 
     fun loadMangaByCategory(slug: String, page: Int = 1) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                error = null,
+                currentSlug = slug,
+                currentPage = page,
+                isCategory = true,
+                currentSearchQuery = null
+            )
             repository.getMangaByCategory(slug, page).fold(
                 onSuccess = { mangaList ->
                     _uiState.value = _uiState.value.copy(
@@ -293,6 +374,33 @@ class MangaViewModel(
                     )
                 }
             )
+        }
+    }
+    
+    fun loadNextPage() {
+        val currentState = _uiState.value
+        val nextPage = currentState.currentPage + 1
+        
+        if (currentState.currentSearchQuery != null) {
+            searchManga(currentState.currentSearchQuery, nextPage)
+        } else if (currentState.isCategory) {
+            loadMangaByCategory(currentState.currentSlug, nextPage)
+        } else {
+            loadMangaList(currentState.currentSlug, nextPage)
+        }
+    }
+    
+    fun loadPreviousPage() {
+        val currentState = _uiState.value
+        if (currentState.currentPage > 1) {
+            val prevPage = currentState.currentPage - 1
+            if (currentState.currentSearchQuery != null) {
+                searchManga(currentState.currentSearchQuery, prevPage)
+            } else if (currentState.isCategory) {
+                loadMangaByCategory(currentState.currentSlug, prevPage)
+            } else {
+                loadMangaList(currentState.currentSlug, prevPage)
+            }
         }
     }
     

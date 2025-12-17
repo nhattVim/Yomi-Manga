@@ -2,12 +2,11 @@ package com.example.yomi_manga.core.constants
 
 object AppConstants {
     const val API_BASE_URL = "https://otruyenapi.com/v1/api/"
-    const val DEFAULT_PAGE_SIZE = 20
-    
+
     const val FIRESTORE_USERS_COLLECTION = "users"
-    const val FIRESTORE_FAVORITES_FIELD = "favoriteManga"
-    const val FIRESTORE_HISTORY_FIELD = "readingHistory"
-    const val MAX_READING_HISTORY = 50
+    const val FIRESTORE_FAVORITES_FIELD = "favorites"
+    const val FIRESTORE_HISTORY_FIELD = "history"
+    const val MAX_READING_HISTORY = 20
     
     const val NAV_ARG_MANGA_ID = "mangaId"
     const val NAV_ARG_MANGA_SLUG = "mangaSlug"
@@ -19,4 +18,3 @@ object AppConstants {
     const val TAG_LOGIN = "LoginScreen"
     const val TAG_FIREBASE = "FirebaseConfig"
 }
-

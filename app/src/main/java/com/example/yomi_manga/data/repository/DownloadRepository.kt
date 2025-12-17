@@ -12,18 +12,31 @@ import com.example.yomi_manga.data.model.DownloadedChapter
 import com.example.yomi_manga.data.model.DownloadedManga
 import com.example.yomi_manga.data.model.Manga
 import com.example.yomi_manga.data.model.MangaAndChapters
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
+import java.util.concurrent.ConcurrentHashMap
 
 class DownloadRepository(
     private val context: Context,
     private val downloadedChapterDao: DownloadedChapterDao,
-    private val downloadedMangaDao: DownloadedMangaDao
+    private val downloadedMangaDao: DownloadedMangaDao,
+    private val externalScope: CoroutineScope
 ) {
+    // Keep track of ongoing downloads to support cancellation
+    private val ongoingDownloads = ConcurrentHashMap<String, Boolean>()
+    
+    // Expose running downloads
+    private val _runningDownloads = MutableStateFlow<Set<String>>(emptySet())
+    val runningDownloads: StateFlow<Set<String>> = _runningDownloads
+
     fun getAllDownloadedManga(): Flow<List<MangaAndChapters>> {
         return downloadedMangaDao.getDownloadedMangaAndChapters()
     }
@@ -40,70 +53,104 @@ class DownloadRepository(
         return downloadedChapterDao.getDownloadedChapter(chapterId)
     }
 
-    suspend fun downloadChapter(
+    fun cancelDownload(chapterId: String) {
+        ongoingDownloads[chapterId] = false
+    }
+
+    fun downloadChapter(
         manga: Manga,
         chapterId: String,
         chapterTitle: String,
         chapterNumber: Float,
         imageUrls: List<String>
     ) {
-        withContext(Dispatchers.IO) {
-            // Save Manga info if not exists
-            val existingManga = downloadedMangaDao.getDownloadedManga(manga.id ?: "")
-            if (existingManga == null) {
-                val downloadedManga = DownloadedManga(
-                    mangaId = manga.id ?: "",
-                    title = manga.title,
-                    slug = manga.slug,
-                    coverUrl = manga.cover ?: "",
-                    author = manga.authorName,
-                    lastDownloaded = Date().time
-                )
-                downloadedMangaDao.insertDownloadedManga(downloadedManga)
-            }
-
-            val imagePaths = mutableListOf<String>()
-            val chapterDir = File(context.filesDir, "manga/${manga.id}/$chapterId")
-            if (!chapterDir.exists()) {
-                chapterDir.mkdirs()
-            }
-
-            val imageLoader = ImageLoader(context)
-
-            for ((index, imageUrl) in imageUrls.withIndex()) {
-                val fileName = "page_$index.jpg"
-                val file = File(chapterDir, fileName)
-                
-                if (file.exists()) {
-                    imagePaths.add(file.absolutePath)
-                    continue
+        ongoingDownloads[chapterId] = true
+        updateRunningDownloads(chapterId, true)
+        
+        externalScope.launch {
+            try {
+                // Save Manga info if not exists
+                val existingManga = downloadedMangaDao.getDownloadedManga(manga.id ?: "")
+                if (existingManga == null) {
+                    val downloadedManga = DownloadedManga(
+                        mangaId = manga.id ?: "",
+                        title = manga.title,
+                        slug = manga.slug,
+                        coverUrl = manga.cover ?: "",
+                        author = manga.authorName,
+                        lastDownloaded = Date().time
+                    )
+                    downloadedMangaDao.insertDownloadedManga(downloadedManga)
                 }
 
-                val request = ImageRequest.Builder(context)
-                    .data(imageUrl)
-                    .allowHardware(false)
-                    .build()
+                val imagePaths = mutableListOf<String>()
+                val chapterDir = File(context.filesDir, "manga/${manga.id}/$chapterId")
+                if (!chapterDir.exists()) {
+                    chapterDir.mkdirs()
+                }
 
-                val result = imageLoader.execute(request)
-                if (result is SuccessResult) {
-                    val bitmap = (result.drawable as BitmapDrawable).bitmap
-                    FileOutputStream(file).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                val imageLoader = ImageLoader(context)
+
+                for ((index, imageUrl) in imageUrls.withIndex()) {
+                    // Check for cancellation
+                    if (ongoingDownloads[chapterId] == false) {
+                        return@launch
                     }
-                    imagePaths.add(file.absolutePath)
-                }
-            }
 
-            val downloadedChapter = DownloadedChapter(
-                chapterId = chapterId,
-                mangaId = manga.id ?: "",
-                chapterTitle = chapterTitle,
-                chapterNumber = chapterNumber,
-                downloadDate = Date().time,
-                imagePaths = imagePaths
-            )
-            downloadedChapterDao.insertDownloadedChapter(downloadedChapter)
+                    val fileName = "page_$index.jpg"
+                    val file = File(chapterDir, fileName)
+                    
+                    if (file.exists()) {
+                        imagePaths.add(file.absolutePath)
+                        continue
+                    }
+
+                    val request = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .allowHardware(false)
+                        .size(coil.size.Size.ORIGINAL) // Request original size for better quality
+                        .precision(coil.size.Precision.EXACT)
+                        .build()
+
+                    val result = imageLoader.execute(request)
+                    if (result is SuccessResult) {
+                        val bitmap = (result.drawable as BitmapDrawable).bitmap
+                        FileOutputStream(file).use { out ->
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                        }
+                        imagePaths.add(file.absolutePath)
+                    }
+                }
+
+                // Check cancellation one last time before saving to DB
+                if (ongoingDownloads[chapterId] == false) return@launch
+
+                val downloadedChapter = DownloadedChapter(
+                    chapterId = chapterId,
+                    mangaId = manga.id ?: "",
+                    chapterTitle = chapterTitle,
+                    chapterNumber = chapterNumber,
+                    downloadDate = Date().time,
+                    imagePaths = imagePaths
+                )
+                downloadedChapterDao.insertDownloadedChapter(downloadedChapter)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                ongoingDownloads.remove(chapterId)
+                updateRunningDownloads(chapterId, false)
+            }
         }
+    }
+    
+    private fun updateRunningDownloads(chapterId: String, isAdding: Boolean) {
+        val current = _runningDownloads.value.toMutableSet()
+        if (isAdding) {
+            current.add(chapterId)
+        } else {
+            current.remove(chapterId)
+        }
+        _runningDownloads.value = current
     }
 
     suspend fun deleteChapter(chapter: DownloadedChapter) {
@@ -133,12 +180,6 @@ class DownloadRepository(
                 mangaDir.deleteRecursively()
             }
             
-            // Delete from DB (Chapters will be deleted by cascade if configured, but here we manually delete or let Room handle if foreign keys set, but we didn't set FK yet. 
-            // Since we didn't set FK with Cascade, we should delete chapters manually or rely on logic.
-            // Let's delete chapters manually first to be safe or rely on `deleteDownloadedManga` and `deleteDownloadedChapter` calls? 
-            // Actually, we should just delete everything for this manga from DB.
-            
-            // However, `downloadedChapterDao` doesn't have `deleteChaptersForManga`. Let's add it or iterate.
             val chapters = downloadedChapterDao.getDownloadedChaptersForMangaList(manga.mangaId)
             chapters.forEach { downloadedChapterDao.deleteDownloadedChapter(it) }
             

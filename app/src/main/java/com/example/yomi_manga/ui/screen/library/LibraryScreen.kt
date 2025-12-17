@@ -1,33 +1,26 @@
 package com.example.yomi_manga.ui.screen.library
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
+import com.example.yomi_manga.ui.viewmodel.LibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
+    viewModel: LibraryViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     onMangaClick: (String) -> Unit
 ) {
@@ -65,10 +58,12 @@ fun LibraryScreen(
             
             when (selectedTab) {
                 0 -> ReadingTab(
+                    viewModel = viewModel,
                     authViewModel = authViewModel,
                     onMangaClick = onMangaClick
                 )
                 1 -> SavedTab(
+                    viewModel = viewModel,
                     authViewModel = authViewModel,
                     onMangaClick = onMangaClick
                 )
@@ -79,10 +74,12 @@ fun LibraryScreen(
 
 @Composable
 fun ReadingTab(
+    viewModel: LibraryViewModel,
     authViewModel: AuthViewModel,
     onMangaClick: (String) -> Unit
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
+    val libraryUiState by viewModel.uiState.collectAsState()
     
     if (authUiState.user == null) {
         Box(
@@ -94,7 +91,7 @@ fun ReadingTab(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-    } else {
+    } else if (libraryUiState.history.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -115,15 +112,57 @@ fun ReadingTab(
                 )
             }
         }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(libraryUiState.history) { item ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onMangaClick(item.slug) }
+                ) {
+                    Column {
+                        AsyncImage(
+                            model = item.coverUrl,
+                            contentDescription = item.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "Đang đọc: ${item.chapterTitle}",
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun SavedTab(
+    viewModel: LibraryViewModel,
     authViewModel: AuthViewModel,
     onMangaClick: (String) -> Unit
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
+    val libraryUiState by viewModel.uiState.collectAsState()
     
     if (authUiState.user == null) {
         Box(
@@ -135,7 +174,7 @@ fun SavedTab(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-    } else {
+    } else if (libraryUiState.favorites.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -156,6 +195,39 @@ fun SavedTab(
                 )
             }
         }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(libraryUiState.favorites) { item ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onMangaClick(item.slug) }
+                ) {
+                    Column {
+                        AsyncImage(
+                            model = item.coverUrl,
+                            contentDescription = item.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
-

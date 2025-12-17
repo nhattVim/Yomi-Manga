@@ -6,7 +6,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,20 +24,43 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.yomi_manga.data.model.ChapterData
 import com.example.yomi_manga.data.model.Manga
 import com.example.yomi_manga.di.AppContainer
+import com.example.yomi_manga.ui.viewmodel.MangaViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -38,19 +70,20 @@ fun ReaderScreen(
     chapterId: String,
     mangaSlug: String? = null,
     onBackClick: () -> Unit,
-    onChapterChange: (String) -> Unit = {}
+    onChapterChange: (String) -> Unit = {},
+    viewModel: MangaViewModel = viewModel()
 ) {
     val repository = AppContainer.mangaRepository
     val context = LocalContext.current
     val downloadRepository = remember { AppContainer.provideDownloadRepository(context) }
-
+    
     val images = remember { mutableStateListOf<String>() }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     var showTopBar by remember { mutableStateOf(true) }
-    var previousScrollOffset by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableIntStateOf(0) }
     var manga by remember { mutableStateOf<Manga?>(null) }
     var showChapterList by remember { mutableStateOf(false) }
     var currentChapterUrl by remember { mutableStateOf(chapterId) }
@@ -78,31 +111,29 @@ fun ReaderScreen(
     
     LaunchedEffect(mangaSlug) {
         if (mangaSlug != null) {
-            // First check if it's downloaded
-            val mangaId = mangaSlug // Assuming slug is ID or we can find by ID. 
-            // Wait, if coming from Storage, mangaSlug might be mangaId.
-            // If coming from API, mangaSlug is slug.
-            
-            // Try to load online first, if fails try offline?
-            // Actually request is "if downloaded, read offline".
-            // We should check if chapter is downloaded.
-            
             repository.getMangaDetail(mangaSlug).fold(
                 onSuccess = { mangaDetail ->
                     manga = mangaDetail
+                    // Also load into viewModel for history saving context
+                    viewModel.loadMangaDetail(mangaSlug)
                 },
-                onFailure = { 
-                    // If online fetch fails, maybe we can construct minimal manga info from DB if needed?
-                    // For now, let's proceed.
-                }
+                onFailure = { }
             )
         }
     }
     
-    LaunchedEffect(currentChapterUrl) {
+    LaunchedEffect(currentChapterUrl, manga) {
         isLoading = true
         error = null
         images.clear()
+        
+        // Save history
+        if (manga != null) {
+            val chapter = allChapters.find { it.chapterApiData == currentChapterUrl }
+            if (chapter != null) {
+                viewModel.saveReadingHistory(manga!!, chapter.chapterApiData, chapter.chapterName)
+            }
+        }
         
         // Check if downloaded
         val downloadedChapter = downloadRepository.getDownloadedChapter(currentChapterUrl)
@@ -222,10 +253,6 @@ fun ReaderScreen(
                         items = images,
                         key = { it }
                     ) { imageUrl ->
-                        // If downloaded, imageUrl is a local path.
-                        // Coil handles file paths automatically if we pass File object or valid path string?
-                        // Coil handles "file:///..." or absolute path.
-
                         val model = if (isDownloaded) File(imageUrl) else imageUrl
                         
                         SubcomposeAsyncImage(
@@ -242,7 +269,7 @@ fun ReaderScreen(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .fillMaxHeight(),
+                                            .height(400.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         CircularProgressIndicator(
@@ -254,7 +281,7 @@ fun ReaderScreen(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .fillMaxHeight(),
+                                            .height(400.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
