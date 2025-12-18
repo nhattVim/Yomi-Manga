@@ -18,7 +18,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+data class CategoryData(
+    val mangaList: List<Manga> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val currentPage: Int = 1
+)
 
 data class MangaUiState(
     val mangaList: List<Manga> = emptyList(),
@@ -26,6 +34,7 @@ data class MangaUiState(
     val error: String? = null,
     val selectedManga: Manga? = null,
     val categories: List<Category> = emptyList(),
+    val categoriesData: Map<String, CategoryData> = emptyMap(),
     val downloadedChapters: Set<String> = emptySet(),
     val downloadingChapterIds: Set<String> = emptySet(),
     val downloadMessage: String? = null,
@@ -74,29 +83,33 @@ class MangaViewModel(
     }
     
     fun loadMangaList(slug: String, page: Int = 1) {
+        // Cập nhật state chung
+        _uiState.update { it.copy(currentSlug = slug, currentPage = page, isCategory = false, currentSearchQuery = null) }
+        
+        // Cập nhật cache cho category này
+        updateCategoryState(slug) { it.copy(isLoading = true, error = null, currentPage = page) }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true, 
-                error = null,
-                currentSlug = slug,
-                currentPage = page,
-                isCategory = false,
-                currentSearchQuery = null
-            )
             repository.getMangaList(slug, page).fold(
                 onSuccess = { mangaList ->
-                    _uiState.value = _uiState.value.copy(
-                        mangaList = mangaList,
-                        isLoading = false,
-                        error = null
-                    )
+                    _uiState.update { state ->
+                        state.copy(
+                            mangaList = if (state.currentSlug == slug) mangaList else state.mangaList,
+                            isLoading = if (state.currentSlug == slug) false else state.isLoading,
+                            categoriesData = state.categoriesData + (slug to CategoryData(
+                                mangaList = mangaList,
+                                isLoading = false,
+                                currentPage = page
+                            ))
+                        )
+                    }
                 },
                 onFailure = { throwable ->
                     val appError = AppError.fromThrowable(throwable)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = appError.message
-                    )
+                    updateCategoryState(slug) { it.copy(isLoading = false, error = appError.message) }
+                    if (_uiState.value.currentSlug == slug) {
+                        _uiState.update { it.copy(isLoading = false, error = appError.message) }
+                    }
                 }
             )
         }
@@ -349,34 +362,42 @@ class MangaViewModel(
     }
 
     fun loadMangaByCategory(slug: String, page: Int = 1) {
+        _uiState.update { it.copy(currentSlug = slug, currentPage = page, isCategory = true, currentSearchQuery = null) }
+        updateCategoryState(slug) { it.copy(isLoading = true, error = null, currentPage = page) }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true, 
-                error = null,
-                currentSlug = slug,
-                currentPage = page,
-                isCategory = true,
-                currentSearchQuery = null
-            )
             repository.getMangaByCategory(slug, page).fold(
                 onSuccess = { mangaList ->
-                    _uiState.value = _uiState.value.copy(
-                        mangaList = mangaList,
-                        isLoading = false,
-                        error = null
-                    )
+                    _uiState.update { state ->
+                        state.copy(
+                            mangaList = if (state.currentSlug == slug) mangaList else state.mangaList,
+                            isLoading = if (state.currentSlug == slug) false else state.isLoading,
+                            categoriesData = state.categoriesData + (slug to CategoryData(
+                                mangaList = mangaList,
+                                isLoading = false,
+                                currentPage = page
+                            ))
+                        )
+                    }
                 },
                 onFailure = { throwable ->
                     val appError = AppError.fromThrowable(throwable)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = appError.message
-                    )
+                    updateCategoryState(slug) { it.copy(isLoading = false, error = appError.message) }
+                    if (_uiState.value.currentSlug == slug) {
+                        _uiState.update { it.copy(isLoading = false, error = appError.message) }
+                    }
                 }
             )
         }
     }
     
+    private fun updateCategoryState(slug: String, update: (CategoryData) -> CategoryData) {
+        _uiState.update { state ->
+            val currentData = state.categoriesData[slug] ?: CategoryData()
+            state.copy(categoriesData = state.categoriesData + (slug to update(currentData)))
+        }
+    }
+
     fun loadNextPage() {
         val currentState = _uiState.value
         val nextPage = currentState.currentPage + 1
