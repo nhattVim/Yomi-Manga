@@ -89,8 +89,15 @@ fun ReaderScreen(
     var currentChapterUrl by remember { mutableStateOf(chapterId) }
     var isDownloaded by remember { mutableStateOf(false) }
     
-    val allChapters = remember(manga) {
-        manga?.chapters?.flatMap { server -> server.items } ?: emptyList()
+    val downloadedChapters = remember { mutableStateListOf<ChapterData>() }
+    
+    val allChapters = remember(manga, downloadedChapters.size) {
+        val remoteChapters = manga?.chapters?.flatMap { server -> server.items } ?: emptyList()
+        if (remoteChapters.isNotEmpty()) {
+            remoteChapters
+        } else {
+            downloadedChapters.toList()
+        }
     }
     
     val currentChapterIndex = remember(allChapters, currentChapterUrl) {
@@ -111,14 +118,44 @@ fun ReaderScreen(
     
     LaunchedEffect(mangaSlug) {
         if (mangaSlug != null) {
+            // Try remote first
             repository.getMangaDetail(mangaSlug).fold(
                 onSuccess = { mangaDetail ->
                     manga = mangaDetail
-                    // Also load into viewModel for history saving context
                     viewModel.loadMangaDetail(mangaSlug)
                 },
-                onFailure = { }
+                onFailure = { 
+                    // If remote fails, try to load downloaded chapters for navigation
+                    coroutineScope.launch {
+                        val downloaded = downloadRepository.getDownloadedChaptersList(mangaSlug)
+                        if (downloaded.isNotEmpty()) {
+                            downloadedChapters.clear()
+                            downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map { 
+                                ChapterData(
+                                    filename = "",
+                                    chapterName = it.chapterTitle.replace("Chapter ", ""),
+                                    chapterTitle = it.chapterTitle,
+                                    chapterApiData = it.chapterId
+                                )
+                            })
+                        }
+                    }
+                }
             )
+            
+            // Always try to load downloaded chapters as fallback or for offline mode
+            val downloaded = downloadRepository.getDownloadedChaptersList(mangaSlug)
+            if (downloaded.isNotEmpty() && manga == null) {
+                downloadedChapters.clear()
+                downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map { 
+                    ChapterData(
+                        filename = "",
+                        chapterName = it.chapterTitle.replace("Chapter ", ""),
+                        chapterTitle = it.chapterTitle,
+                        chapterApiData = it.chapterId
+                    )
+                })
+            }
         }
     }
     
@@ -127,7 +164,7 @@ fun ReaderScreen(
         error = null
         images.clear()
         
-        // Save history
+        // Save history if we have manga info
         if (manga != null) {
             val chapter = allChapters.find { it.chapterApiData == currentChapterUrl }
             if (chapter != null) {

@@ -45,6 +45,12 @@ class DownloadRepository(
         return downloadedChapterDao.getDownloadedChaptersForManga(mangaId)
     }
 
+    suspend fun getDownloadedChaptersList(mangaId: String): List<DownloadedChapter> {
+        return withContext(Dispatchers.IO) {
+            downloadedChapterDao.getDownloadedChaptersForMangaList(mangaId)
+        }
+    }
+
     suspend fun isChapterDownloaded(chapterId: String): Boolean {
         return downloadedChapterDao.getDownloadedChapter(chapterId) != null
     }
