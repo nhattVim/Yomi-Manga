@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -76,7 +79,8 @@ fun ReaderScreen(
     val repository = AppContainer.mangaRepository
     val context = LocalContext.current
     val downloadRepository = remember { AppContainer.provideDownloadRepository(context) }
-    
+    val uiState by viewModel.uiState.collectAsState()
+
     val images = remember { mutableStateListOf<String>() }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -88,25 +92,25 @@ fun ReaderScreen(
     var showChapterList by remember { mutableStateOf(false) }
     var currentChapterUrl by remember { mutableStateOf(chapterId) }
     var isDownloaded by remember { mutableStateOf(false) }
-    
+
     val downloadedChapters = remember { mutableStateListOf<ChapterData>() }
-    
+
     val allChapters = remember(manga, downloadedChapters.size) {
         val remoteChapters = manga?.chapters?.flatMap { server -> server.items } ?: emptyList()
-        if (remoteChapters.isNotEmpty()) {
-            remoteChapters
-        } else {
+        val list = remoteChapters.ifEmpty {
             downloadedChapters.toList()
         }
+        // Always sort ascending for consistent navigation (1 -> 6 -> 9)
+        list.sortedBy { it.chapterName.toDoubleOrNull() ?: 0.0 }
     }
-    
+
     val currentChapterIndex = remember(allChapters, currentChapterUrl) {
         allChapters.indexOfFirst { it.chapterApiData == currentChapterUrl }
     }
-    
+
     val hasPreviousChapter = currentChapterIndex > 0
     val hasNextChapter = currentChapterIndex >= 0 && currentChapterIndex < allChapters.size - 1
-    
+
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemScrollOffset }
             .collect { offset ->
@@ -115,7 +119,7 @@ fun ReaderScreen(
                 previousScrollOffset = currentOffset
             }
     }
-    
+
     LaunchedEffect(mangaSlug) {
         if (mangaSlug != null) {
             // Try remote first
@@ -124,13 +128,13 @@ fun ReaderScreen(
                     manga = mangaDetail
                     viewModel.loadMangaDetail(mangaSlug)
                 },
-                onFailure = { 
+                onFailure = {
                     // If remote fails, try to load downloaded chapters for navigation
                     coroutineScope.launch {
                         val downloaded = downloadRepository.getDownloadedChaptersList(mangaSlug)
                         if (downloaded.isNotEmpty()) {
                             downloadedChapters.clear()
-                            downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map { 
+                            downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map {
                                 ChapterData(
                                     filename = "",
                                     chapterName = it.chapterTitle.replace("Chapter ", ""),
@@ -142,12 +146,12 @@ fun ReaderScreen(
                     }
                 }
             )
-            
+
             // Always try to load downloaded chapters as fallback or for offline mode
             val downloaded = downloadRepository.getDownloadedChaptersList(mangaSlug)
             if (downloaded.isNotEmpty() && manga == null) {
                 downloadedChapters.clear()
-                downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map { 
+                downloadedChapters.addAll(downloaded.sortedBy { it.chapterNumber }.map {
                     ChapterData(
                         filename = "",
                         chapterName = it.chapterTitle.replace("Chapter ", ""),
@@ -158,12 +162,12 @@ fun ReaderScreen(
             }
         }
     }
-    
+
     LaunchedEffect(currentChapterUrl, manga) {
         isLoading = true
         error = null
         images.clear()
-        
+
         // Save history if we have manga info
         if (manga != null) {
             val chapter = allChapters.find { it.chapterApiData == currentChapterUrl }
@@ -171,7 +175,7 @@ fun ReaderScreen(
                 viewModel.saveReadingHistory(manga!!, chapter.chapterApiData, chapter.chapterName)
             }
         }
-        
+
         // Check if downloaded
         val downloadedChapter = downloadRepository.getDownloadedChapter(currentChapterUrl)
         if (downloadedChapter != null) {
@@ -192,13 +196,13 @@ fun ReaderScreen(
             )
         }
     }
-    
+
     fun loadChapterImages() {
         coroutineScope.launch {
             isLoading = true
             error = null
             images.clear()
-            
+
             val downloadedChapter = downloadRepository.getDownloadedChapter(currentChapterUrl)
             if (downloadedChapter != null) {
                 isDownloaded = true
@@ -219,7 +223,7 @@ fun ReaderScreen(
             }
         }
     }
-    
+
     fun navigateToChapter(chapterData: ChapterData) {
         currentChapterUrl = chapterData.chapterApiData
         onChapterChange(chapterData.chapterApiData)
@@ -228,21 +232,21 @@ fun ReaderScreen(
             listState.animateScrollToItem(0)
         }
     }
-    
+
     fun navigateToPreviousChapter() {
         if (hasPreviousChapter) {
             val prevChapter = allChapters[currentChapterIndex - 1]
             navigateToChapter(prevChapter)
         }
     }
-    
+
     fun navigateToNextChapter() {
         if (hasNextChapter) {
             val nextChapter = allChapters[currentChapterIndex + 1]
             navigateToChapter(nextChapter)
         }
     }
-    
+
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             isLoading -> {
@@ -253,6 +257,7 @@ fun ReaderScreen(
                     CircularProgressIndicator()
                 }
             }
+
             error != null -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -272,6 +277,7 @@ fun ReaderScreen(
                     }
                 }
             }
+
             images.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -280,6 +286,7 @@ fun ReaderScreen(
                     Text("Không có hình ảnh")
                 }
             }
+
             else -> {
                 LazyColumn(
                     state = listState,
@@ -291,7 +298,7 @@ fun ReaderScreen(
                         key = { it }
                     ) { imageUrl ->
                         val model = if (isDownloaded) File(imageUrl) else imageUrl
-                        
+
                         SubcomposeAsyncImage(
                             model = model,
                             contentDescription = null,
@@ -314,6 +321,7 @@ fun ReaderScreen(
                                         )
                                     }
                                 }
+
                                 is AsyncImagePainter.State.Error -> {
                                     Box(
                                         modifier = Modifier
@@ -327,6 +335,7 @@ fun ReaderScreen(
                                         )
                                     }
                                 }
+
                                 else -> {
                                     SubcomposeAsyncImageContent()
                                 }
@@ -336,7 +345,7 @@ fun ReaderScreen(
                 }
             }
         }
-        
+
         AnimatedVisibility(
             visible = showTopBar,
             enter = fadeIn() + slideInVertically(),
@@ -387,7 +396,7 @@ fun ReaderScreen(
                 )
             )
         }
-        
+
         if (showChapterList && allChapters.isNotEmpty()) {
             ChapterListBottomSheet(
                 chapters = allChapters,
@@ -395,7 +404,9 @@ fun ReaderScreen(
                 onDismiss = { showChapterList = false },
                 onChapterClick = { chapterData ->
                     navigateToChapter(chapterData)
-                }
+                },
+                isDescending = uiState.isChaptersDescending,
+                onToggleSort = { viewModel.toggleChapterSort() }
             )
         }
     }
@@ -407,10 +418,20 @@ fun ChapterListBottomSheet(
     chapters: List<ChapterData>,
     currentChapterUrl: String,
     onDismiss: () -> Unit,
-    onChapterClick: (ChapterData) -> Unit
+    onChapterClick: (ChapterData) -> Unit,
+    isDescending: Boolean,
+    onToggleSort: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
+    val displayChapters = remember(chapters, isDescending) {
+        if (isDescending) {
+            chapters.sortedByDescending { it.chapterName.toDoubleOrNull() ?: 0.0 }
+        } else {
+            chapters.sortedBy { it.chapterName.toDoubleOrNull() ?: 0.0 }
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -420,20 +441,35 @@ fun ChapterListBottomSheet(
                 .fillMaxWidth()
                 .heightIn(max = 600.dp)
         ) {
-            Text(
-                text = "Danh sách chương",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
-            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Danh sách chương",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
+                )
+                IconButton(onClick = onToggleSort) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                        contentDescription = "Sắp xếp",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(chapters.size) { index ->
-                    val chapter = chapters[index]
+                items(displayChapters.size) { index ->
+                    val chapter = displayChapters[index]
                     val isCurrentChapter = chapter.chapterApiData == currentChapterUrl
-                    
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

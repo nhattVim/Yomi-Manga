@@ -1,20 +1,51 @@
 package com.example.yomi_manga.ui.screen.detail
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -79,21 +110,14 @@ fun MangaDetailScreen(
                         val manga = uiState.selectedManga
                         if (manga != null) {
                             val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
-                            val index =
-                                allChapters.indexOfFirst { it.chapterApiData == uiState.lastReadChapterId }
+                            val sortedChapters = if (uiState.isChaptersDescending) {
+                                allChapters.sortedByDescending { it.chapterName.toDoubleOrNull() ?: 0.0 }
+                            } else {
+                                allChapters.sortedBy { it.chapterName.toDoubleOrNull() ?: 0.0 }
+                            }
+                            
+                            val index = sortedChapters.indexOfFirst { it.chapterApiData == uiState.lastReadChapterId }
                             if (index != -1) {
-                                // Add 3 to index because of the header items (Cover/Info, Description, Genres)
-                                // This is an approximation since header items can be variable.
-                                // Better way: Find index in the combined list if using a single list, or use sticky headers.
-                                // Since we use item {} blocks before chapters, we need to offset.
-                                // Let's count items: 
-                                // 1. Header (Info)
-                                // 2. Description
-                                // 3. Genres (if exists)
-                                // 4. Chapter List Header
-                                // 5. Empty msg (if empty)
-                                // OR Chapters...
-
                                 var offset = 3 // Header + Description + Chapter List Header
                                 if (manga.genres?.isNotEmpty() == true) {
                                     offset += 1
@@ -147,6 +171,15 @@ fun MangaDetailScreen(
 
             uiState.selectedManga != null -> {
                 val manga = uiState.selectedManga!!
+                val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
+                val sortedChapters = remember(allChapters, uiState.isChaptersDescending) {
+                    if (uiState.isChaptersDescending) {
+                        allChapters.sortedByDescending { it.chapterName.toDoubleOrNull() ?: 0.0 }
+                    } else {
+                        allChapters.sortedBy { it.chapterName.toDoubleOrNull() ?: 0.0 }
+                    }
+                }
+
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -233,8 +266,6 @@ fun MangaDetailScreen(
                         }
                     }
 
-                    val allChapters = manga.chapters?.flatMap { it.items } ?: emptyList()
-
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -247,18 +278,27 @@ fun MangaDetailScreen(
                                 fontWeight = FontWeight.Bold
                             )
 
-                            if (allChapters.isNotEmpty()) {
-                                IconButton(
-                                    modifier = Modifier.size(42.dp),
-                                    onClick = {
-                                        viewModel.downloadAllChapters(allChapters)
-                                    }
-                                ) {
+                            Row {
+                                IconButton(onClick = { viewModel.toggleChapterSort() }) {
                                     Icon(
-                                        imageVector = Icons.Default.Downloading,
-                                        contentDescription = "Tải tất cả",
+                                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                                        contentDescription = "Sắp xếp",
                                         tint = MaterialTheme.colorScheme.primary
                                     )
+                                }
+                                if (allChapters.isNotEmpty()) {
+                                    IconButton(
+                                        modifier = Modifier.size(42.dp),
+                                        onClick = {
+                                            viewModel.downloadAllChapters(allChapters)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Downloading,
+                                            contentDescription = "Tải tất cả",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -280,9 +320,7 @@ fun MangaDetailScreen(
                             }
                         }
                     } else {
-                        manga.chapters?.flatMap { server ->
-                            server.items
-                        }?.forEach { chapterData ->
+                        sortedChapters.forEach { chapterData ->
                             item {
                                 val isDownloaded =
                                     uiState.downloadedChapters.contains(chapterData.chapterApiData)

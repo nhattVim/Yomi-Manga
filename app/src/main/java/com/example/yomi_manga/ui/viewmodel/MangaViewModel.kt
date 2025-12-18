@@ -45,7 +45,8 @@ data class MangaUiState(
     val isCategory: Boolean = false,
     val currentSearchQuery: String? = null,
     val isFavorite: Boolean = false,
-    val lastReadChapterId: String? = null
+    val lastReadChapterId: String? = null,
+    val isChaptersDescending: Boolean = true
 ) {
     companion object {
         fun initial() = MangaUiState()
@@ -129,9 +130,9 @@ class MangaViewModel(
                         isLoading = false,
                         error = null
                     )
-                    checkDownloadedChapters(manga.id ?: "")
-                    checkFavorite(manga.id ?: "")
-                    checkLastReadChapter(manga.id ?: "")
+                    checkDownloadedChapters(manga.id)
+                    checkFavorite(manga.id)
+                    checkLastReadChapter(manga.id)
                 },
                 onFailure = { throwable ->
                     val appError = AppError.fromThrowable(throwable)
@@ -204,7 +205,7 @@ class MangaViewModel(
     fun saveReadingHistory(manga: Manga, chapterId: String, chapterTitle: String) {
         if (FirebaseAuth.getInstance().currentUser == null) return
 
-        val mangaId = manga.id ?: return
+        val mangaId = manga.id
 
         viewModelScope.launch {
             try {
@@ -217,7 +218,7 @@ class MangaViewModel(
                     chapterTitle = chapterTitle
                 )
                 libraryRepository.addToHistory(history)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Fail silently for history
             }
         }
@@ -282,7 +283,7 @@ class MangaViewModel(
 
         chaptersToDownload.forEach { chapter ->
             downloadChapter(
-                mangaId = manga.id ?: "",
+                mangaId = manga.id,
                 chapterApiData = chapter.chapterApiData,
                 chapterTitle = chapter.chapterName,
                 chapterNumber = chapter.chapterName.toFloatOrNull() ?: 0f
@@ -427,5 +428,9 @@ class MangaViewModel(
     
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun toggleChapterSort() {
+        _uiState.update { it.copy(isChaptersDescending = !it.isChaptersDescending) }
     }
 }
