@@ -411,7 +411,7 @@ fun ChapterListBottomSheet(
                         )
                     ) {
                         Text(
-                            text = chapter.filename,
+                            text = "Chapter " + chapter.chapterName,
                             modifier = Modifier.padding(16.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = if (isCurrentChapter) FontWeight.Bold else FontWeight.Normal,

@@ -43,7 +43,7 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .weight(1f)
         ) {
-            ScrollableTabRow(
+            TabRow(
                 selectedTabIndex = selectedTab,
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.DownloadForOffline
+import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.History
@@ -109,9 +110,6 @@ fun MangaDetailScreen(
                 }
             }
         },
-        snackbarHost = {
-            // Custom Snackbar handling if needed, or stick to Scaffold's default if we passed SnackbarHostState
-        }
     ) { paddingValues ->
         when {
             uiState.isLoading -> {
@@ -251,12 +249,13 @@ fun MangaDetailScreen(
 
                             if (allChapters.isNotEmpty()) {
                                 IconButton(
+                                    modifier = Modifier.size(42.dp),
                                     onClick = {
                                         viewModel.downloadAllChapters(allChapters)
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.DownloadForOffline,
+                                        imageVector = Icons.Default.Downloading,
                                         contentDescription = "Tải tất cả",
                                         tint = MaterialTheme.colorScheme.primary
                                     )

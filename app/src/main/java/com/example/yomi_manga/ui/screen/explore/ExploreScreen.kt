@@ -2,8 +2,12 @@ package com.example.yomi_manga.ui.screen.explore
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -127,6 +131,43 @@ fun ExploreScreen(
                                 manga = manga,
                                 onClick = { onMangaClick(manga.slug) }
                             )
+                        }
+
+                        // Add pagination as a footer item
+                        if (uiState.mangaList.isNotEmpty()) {
+                            item(span = { GridItemSpan(2) }) { // Span across all columns
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = { viewModel.loadPreviousPage() },
+                                        enabled = uiState.currentPage > 1
+                                    ) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Previous Page"
+                                        )
+                                    }
+
+                                    Text(
+                                        text = "Trang ${uiState.currentPage}",
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+
+                                    IconButton(
+                                        onClick = { viewModel.loadNextPage() }
+                                    ) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = "Next Page"
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
