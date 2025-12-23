@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
 import com.example.yomi_manga.ui.viewmodel.LibraryViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,9 +27,10 @@ fun LibraryScreen(
     authViewModel: AuthViewModel = viewModel(),
     onMangaClick: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Đang đọc", "Đã lưu")
-    
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val coroutineScope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -37,36 +41,47 @@ fun LibraryScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
         ) {
             TabRow(
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = pagerState.currentPage,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
                         text = { Text(title) }
                     )
                 }
             }
-            
-            when (selectedTab) {
-                0 -> ReadingTab(
-                    viewModel = viewModel,
-                    authViewModel = authViewModel,
-                    onMangaClick = onMangaClick
-                )
-                1 -> SavedTab(
-                    viewModel = viewModel,
-                    authViewModel = authViewModel,
-                    onMangaClick = onMangaClick
-                )
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1,
+                verticalAlignment = Alignment.Top
+            ) { page ->
+                when (page) {
+                    0 -> ReadingTab(
+                        viewModel = viewModel,
+                        authViewModel = authViewModel,
+                        onMangaClick = onMangaClick
+                    )
+                    1 -> SavedTab(
+                        viewModel = viewModel,
+                        authViewModel = authViewModel,
+                        onMangaClick = onMangaClick
+                    )
+                }
             }
         }
     }
@@ -80,7 +95,7 @@ fun ReadingTab(
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
     val libraryUiState by viewModel.uiState.collectAsState()
-    
+
     if (authUiState.user == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -117,7 +132,8 @@ fun ReadingTab(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(libraryUiState.history) { item ->
                 Card(
@@ -163,7 +179,7 @@ fun SavedTab(
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
     val libraryUiState by viewModel.uiState.collectAsState()
-    
+
     if (authUiState.user == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -200,7 +216,8 @@ fun SavedTab(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(libraryUiState.favorites) { item ->
                 Card(
