@@ -98,6 +98,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    
+    // DataStore - Added for Theme Settings
+    implementation("androidx.datastore:datastore-preferences:1.2.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

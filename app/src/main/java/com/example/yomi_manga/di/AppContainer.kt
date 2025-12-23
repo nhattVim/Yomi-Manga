@@ -13,6 +13,7 @@ import com.example.yomi_manga.data.repository.AuthRepository
 import com.example.yomi_manga.data.repository.DownloadRepository
 import com.example.yomi_manga.data.repository.LibraryRepository
 import com.example.yomi_manga.data.repository.MangaRepository
+import com.example.yomi_manga.data.repository.SettingsRepository
 import com.example.yomi_manga.data.repository.UserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,5 +77,13 @@ object AppContainer {
             )
         }
         return _downloadRepository!!
+    }
+
+    private var _settingsRepository: SettingsRepository? = null
+    fun provideSettingsRepository(context: Context): SettingsRepository {
+        if (_settingsRepository == null) {
+            _settingsRepository = SettingsRepository(context.applicationContext)
+        }
+        return _settingsRepository!!
     }
 }

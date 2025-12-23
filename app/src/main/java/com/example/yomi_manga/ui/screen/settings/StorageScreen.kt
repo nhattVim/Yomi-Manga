@@ -1,22 +1,17 @@
 package com.example.yomi_manga.ui.screen.settings
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -24,7 +19,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.yomi_manga.data.model.DownloadedChapter
 import com.example.yomi_manga.data.model.MangaAndChapters
-import com.example.yomi_manga.di.AppContainer
 import com.example.yomi_manga.ui.viewmodel.SettingsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,62 +31,34 @@ fun StorageScreen(
     onChapterClick: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    
-    LaunchedEffect(Unit) {
-        val repo = AppContainer.provideDownloadRepository(context)
-        viewModel.setDownloadRepository(repo)
-    }
-
-    val isSelectionMode = uiState.selectedItems.isNotEmpty()
     val selectedManga = uiState.selectedManga
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { 
-                    if (isSelectionMode) {
-                        Text("${uiState.selectedItems.size} đã chọn")
-                    } else if (selectedManga != null) {
+                    if (selectedManga != null) {
                         Text(selectedManga.manga.title)
                     } else {
                         Text("Quản lý tải xuống") 
                     }
                 },
                 navigationIcon = {
-                    if (isSelectionMode) {
-                         IconButton(onClick = { viewModel.clearSelection() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancel Selection")
+                    IconButton(onClick = {
+                        if (selectedManga != null) {
+                            viewModel.clearSelectedManga()
+                        } else {
+                            onBackClick()
                         }
-                    } else {
-                        IconButton(onClick = {
-                            if (selectedManga != null) {
-                                viewModel.clearSelectedManga()
-                            } else {
-                                onBackClick()
-                            }
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    if (isSelectionMode) {
-                         IconButton(onClick = { viewModel.selectAll() }) {
-                            Icon(Icons.Default.SelectAll, contentDescription = "Select All")
-                        }
-                        IconButton(onClick = { viewModel.deleteSelectedItems() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
-                        }
-                    }
-                },
-                colors = if (isSelectionMode) {
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                } else {
-                    TopAppBarDefaults.topAppBarColors()
-                }
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         }
     ) { paddingValues ->
@@ -115,20 +81,10 @@ fun StorageScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(uiState.downloadedManga, key = { it.manga.mangaId }) { mangaItem ->
-                        val isSelected = uiState.selectedItems.contains(mangaItem.manga.mangaId)
                         DownloadedMangaItem(
                             mangaAndChapters = mangaItem,
-                            isSelected = isSelected,
-                            isSelectionMode = isSelectionMode,
                             onClick = {
-                                if (isSelectionMode) {
-                                    viewModel.toggleSelection(mangaItem.manga.mangaId)
-                                } else {
-                                    viewModel.selectManga(mangaItem)
-                                }
-                            },
-                            onLongClick = {
-                                viewModel.toggleSelection(mangaItem.manga.mangaId)
+                                viewModel.selectManga(mangaItem)
                             },
                             onDeleteClick = {
                                 viewModel.deleteManga(mangaItem.manga)
@@ -150,20 +106,10 @@ fun StorageScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(chapters, key = { it.chapterId }) { chapter ->
-                        val isSelected = uiState.selectedItems.contains(chapter.chapterId)
                         DownloadedChapterItem(
                             chapter = chapter,
-                            isSelected = isSelected,
-                            isSelectionMode = isSelectionMode,
                             onClick = {
-                                if (isSelectionMode) {
-                                    viewModel.toggleSelection(chapter.chapterId)
-                                } else {
-                                    onChapterClick(chapter.chapterId, chapter.mangaId)
-                                }
-                            },
-                            onLongClick = {
-                                viewModel.toggleSelection(chapter.chapterId)
+                                onChapterClick(chapter.chapterId, chapter.mangaId)
                             },
                             onDeleteClick = {
                                 viewModel.deleteChapter(chapter)
@@ -176,28 +122,16 @@ fun StorageScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DownloadedMangaItem(
     mangaAndChapters: MangaAndChapters,
-    isSelected: Boolean,
-    isSelectionMode: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
      Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        colors = if (isSelected) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        }
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -240,47 +174,27 @@ fun DownloadedMangaItem(
                 }
             }
             
-            if (isSelectionMode) {
+            IconButton(onClick = onDeleteClick) {
                 Icon(
-                    imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = if (isSelected) "Selected" else "Unselected",
-                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error
                 )
-            } else {
-                IconButton(onClick = onDeleteClick) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DownloadedChapterItem(
     chapter: DownloadedChapter,
-    isSelected: Boolean,
-    isSelectionMode: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        colors = if (isSelected) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        }
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -304,26 +218,18 @@ fun DownloadedChapterItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "${chapter.imagePaths.size} trang",
+                    text = "${chapter.imagePaths.size} ảnh",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             
-            if (isSelectionMode) {
+            IconButton(onClick = onDeleteClick) {
                 Icon(
-                    imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = if (isSelected) "Selected" else "Unselected",
-                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error
                 )
-            } else {
-                IconButton(onClick = onDeleteClick) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
             }
         }
     }

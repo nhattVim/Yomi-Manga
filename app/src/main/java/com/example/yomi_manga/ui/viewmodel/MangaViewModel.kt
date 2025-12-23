@@ -55,7 +55,7 @@ data class MangaUiState(
 
 class MangaViewModel(
     private val repository: MangaRepository = AppContainer.mangaRepository,
-    private val downloadRepository: DownloadRepository? = null,
+    downloadRepository: DownloadRepository? = null,
     private val libraryRepository: LibraryRepository = AppContainer.libraryRepository
 ) : ViewModel() {
     

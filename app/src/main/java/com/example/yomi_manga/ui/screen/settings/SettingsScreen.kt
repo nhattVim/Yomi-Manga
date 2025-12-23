@@ -1,60 +1,43 @@
 package com.example.yomi_manga.ui.screen.settings
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
+import com.example.yomi_manga.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     authViewModel: AuthViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel(),
     onLogout: () -> Unit,
     onStorageClick: () -> Unit
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
-    val user = authUiState.user
+    val settingsUiState by settingsViewModel.uiState.collectAsState()
     
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    val user = authUiState.user
+    val themeMode = settingsUiState.themeMode
+    
+    var showThemeDialog by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Cài đặt") },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -62,21 +45,15 @@ fun SettingsScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
-        
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // Group 1: Thông tin người dùng
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
+                SettingsGroup(title = "Hồ sơ") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -85,22 +62,19 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         if (user != null) {
-                            user.photoUrl?.let { photoUrl ->
-                                AsyncImage(
-                                    model = photoUrl,
-                                    contentDescription = "Avatar",
-                                    modifier = Modifier.size(64.dp)
-                                )
-                            } ?: Icon(
-                                imageVector = Icons.Default.AccountCircle,
+                            AsyncImage(
+                                model = user.photoUrl ?: Icons.Default.AccountCircle,
                                 contentDescription = "Avatar",
-                                modifier = Modifier.size(64.dp)
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
-                            
-                            Column(modifier = Modifier.weight(1f)) {
+                            Column {
                                 Text(
                                     text = user.displayName ?: "Người dùng",
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = user.email ?: "",
@@ -111,8 +85,9 @@ fun SettingsScreen(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Avatar",
-                                modifier = Modifier.size(64.dp)
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.outline
                             )
                             Text(
                                 text = "Chưa đăng nhập",
@@ -122,96 +97,177 @@ fun SettingsScreen(
                     }
                 }
             }
-            
-            val settingsItems = listOf(
-                SettingsItem(
-                    title = "Thông báo",
-                    icon = Icons.Default.Notifications,
-                    onClick = { }
-                ),
-                SettingsItem(
-                    title = "Chất lượng hình ảnh",
-                    icon = Icons.Default.PhotoCamera,
-                    onClick = { }
-                ),
-                SettingsItem(
-                    title = "Lưu trữ",
-                    icon = Icons.Default.Storage,
-                    onClick = onStorageClick
-                ),
-                SettingsItem(
-                    title = "Về ứng dụng",
-                    icon = Icons.Default.Info,
-                    onClick = { }
-                )
-            )
-            
-            items(settingsItems) { item ->
-                SettingsItemRow(item = item)
+
+            // Group 2: Cài đặt ứng dụng
+            item {
+                SettingsGroup(title = "Ứng dụng") {
+                    SettingsItemRow(
+                        title = "Giao diện",
+                        subtitle = when(themeMode) {
+                            "dark" -> "Tối"
+                            "light" -> "Sáng"
+                            else -> "Theo hệ thống"
+                        },
+                        icon = Icons.Default.Palette,
+                        onClick = { showThemeDialog = true }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                    SettingsItemRow(
+                        title = "Quản lý tải xuống",
+                        icon = Icons.Default.Download,
+                        onClick = onStorageClick
+                    )
+                }
             }
-            
-            if (user != null) {
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
+
+            // Group 3: Tài khoản
+            item {
+                SettingsGroup(title = "Tài khoản") {
+                    SettingsItemRow(
+                        title = "Đăng xuất",
+                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+                        iconColor = MaterialTheme.colorScheme.error,
                         onClick = {
                             authViewModel.signOut()
                             onLogout()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Đăng xuất")
-                    }
+                        }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                    SettingsItemRow(
+                        title = "Xoá tài khoản",
+                        icon = Icons.Default.DeleteForever,
+                        iconColor = MaterialTheme.colorScheme.error,
+                        onClick = { /* Xử lý xoá tài khoản */ }
+                    )
                 }
             }
         }
     }
+
+    // Dialog chọn Theme
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text("Chọn giao diện") },
+            text = {
+                Column {
+                    ThemeOption("light", "Sáng", themeMode == "light") {
+                        settingsViewModel.setThemeMode("light")
+                        showThemeDialog = false
+                    }
+                    ThemeOption("dark", "Tối", themeMode == "dark") {
+                        settingsViewModel.setThemeMode("dark")
+                        showThemeDialog = false
+                    }
+                    ThemeOption("system", "Theo hệ thống", themeMode == "system") {
+                        settingsViewModel.setThemeMode("system")
+                        showThemeDialog = false
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text("Đóng")
+                }
+            }
+        )
+    }
 }
 
-data class SettingsItem(
-    val title: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val onClick: () -> Unit
-)
+@Composable
+fun SettingsGroup(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+        )
+        // Thay đổi từ Card sang OutlinedCard để có viền rõ ràng trong cả 2 theme
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = CardDefaults.outlinedCardBorder().copy(
+                width = 1.dp
+            )
+        ) {
+            Column(content = content)
+        }
+    }
+}
 
 @Composable
-fun SettingsItemRow(item: SettingsItem) {
-    Card(
+fun SettingsItemRow(
+    title: String,
+    subtitle: String? = null,
+    icon: ImageVector,
+    iconColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
+    onClick: () -> Unit
+) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = item.onClick)
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor
+        )
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
             )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun ThemeOption(
+    mode: String,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }

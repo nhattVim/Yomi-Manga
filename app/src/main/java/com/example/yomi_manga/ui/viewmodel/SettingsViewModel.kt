@@ -6,6 +6,7 @@ import com.example.yomi_manga.data.model.DownloadedChapter
 import com.example.yomi_manga.data.model.DownloadedManga
 import com.example.yomi_manga.data.model.MangaAndChapters
 import com.example.yomi_manga.data.repository.DownloadRepository
+import com.example.yomi_manga.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,25 +16,47 @@ data class SettingsUiState(
     val downloadedManga: List<MangaAndChapters> = emptyList(),
     val isLoading: Boolean = false,
     val selectedManga: MangaAndChapters? = null,
-    val selectedItems: Set<String> = emptySet() // IDs of selected items (mangaId or chapterId depending on context)
+    val selectedItems: Set<String> = emptySet(),
+    val themeMode: String = "system"
 )
 
 class SettingsViewModel(
-    private val downloadRepository: DownloadRepository? = null
+    private var downloadRepository: DownloadRepository? = null,
+    private var settingsRepository: SettingsRepository? = null
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-    
-    private var _repository: DownloadRepository? = downloadRepository
 
-    fun setDownloadRepository(repo: DownloadRepository) {
-        _repository = repo
-        loadDownloadedManga()
+    fun init(downloadRepo: DownloadRepository, settingsRepo: SettingsRepository) {
+        if (this.downloadRepository == null) {
+            this.downloadRepository = downloadRepo
+            loadDownloadedManga()
+        }
+        if (this.settingsRepository == null) {
+            this.settingsRepository = settingsRepo
+            observeTheme()
+        }
     }
-    
+
+    private fun observeTheme() {
+        settingsRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.themeMode.collect { mode ->
+                    _uiState.value = _uiState.value.copy(themeMode = mode)
+                }
+            }
+        }
+    }
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch {
+            settingsRepository?.setThemeMode(mode)
+        }
+    }
+
     private fun loadDownloadedManga() {
-        val repo = _repository ?: return
+        val repo = downloadRepository ?: return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             repo.getAllDownloadedManga().collect { mangaList ->
@@ -43,14 +66,10 @@ class SettingsViewModel(
                 )
                 
                 // Update selected manga if it's currently open
-                if (_uiState.value.selectedManga != null) {
-                    val updatedSelectedManga = mangaList.find { it.manga.mangaId == _uiState.value.selectedManga!!.manga.mangaId }
-                    if (updatedSelectedManga != null) {
-                        _uiState.value = _uiState.value.copy(selectedManga = updatedSelectedManga)
-                    } else {
-                        // Manga was deleted, close selection
-                        _uiState.value = _uiState.value.copy(selectedManga = null)
-                    }
+                val currentSelected = _uiState.value.selectedManga
+                if (currentSelected != null) {
+                    val updated = mangaList.find { it.manga.mangaId == currentSelected.manga.mangaId }
+                    _uiState.value = _uiState.value.copy(selectedManga = updated)
                 }
             }
         }
@@ -74,43 +93,6 @@ class SettingsViewModel(
         _uiState.value = _uiState.value.copy(selectedItems = currentSelected)
     }
 
-    fun deleteSelectedItems() {
-        val repo = _repository ?: return
-        val selectedIds = _uiState.value.selectedItems
-        val selectedManga = _uiState.value.selectedManga
-
-        viewModelScope.launch {
-            if (selectedManga == null) {
-                // We are in manga list, delete selected mangas
-                val mangasToDelete = _uiState.value.downloadedManga.filter { it.manga.mangaId in selectedIds }
-                mangasToDelete.forEach { mangaAndChapters ->
-                     repo.deleteManga(mangaAndChapters.manga)
-                }
-            } else {
-                // We are in chapter list, delete selected chapters
-                val chaptersToDelete = selectedManga.chapters.filter { it.chapterId in selectedIds }
-                chaptersToDelete.forEach { chapter ->
-                    repo.deleteChapter(chapter)
-                }
-            }
-            _uiState.value = _uiState.value.copy(selectedItems = emptySet())
-        }
-    }
-
-    fun deleteManga(manga: DownloadedManga) {
-        val repo = _repository ?: return
-        viewModelScope.launch {
-            repo.deleteManga(manga)
-        }
-    }
-
-    fun deleteChapter(chapter: DownloadedChapter) {
-        val repo = _repository ?: return
-        viewModelScope.launch {
-            repo.deleteChapter(chapter)
-        }
-    }
-    
     fun selectAll() {
         val selectedManga = _uiState.value.selectedManga
         if (selectedManga == null) {
@@ -121,8 +103,37 @@ class SettingsViewModel(
             _uiState.value = _uiState.value.copy(selectedItems = allIds)
         }
     }
-    
+
     fun clearSelection() {
         _uiState.value = _uiState.value.copy(selectedItems = emptySet())
+    }
+
+    fun deleteSelectedItems() {
+        val repo = downloadRepository ?: return
+        val selectedIds = _uiState.value.selectedItems
+        val selectedManga = _uiState.value.selectedManga
+
+        viewModelScope.launch {
+            if (selectedManga == null) {
+                val mangasToDelete = _uiState.value.downloadedManga.filter { it.manga.mangaId in selectedIds }
+                mangasToDelete.forEach { repo.deleteManga(it.manga) }
+            } else {
+                val chaptersToDelete = selectedManga.chapters.filter { it.chapterId in selectedIds }
+                chaptersToDelete.forEach { repo.deleteChapter(it) }
+            }
+            _uiState.value = _uiState.value.copy(selectedItems = emptySet())
+        }
+    }
+
+    fun deleteManga(manga: DownloadedManga) {
+        viewModelScope.launch {
+            downloadRepository?.deleteManga(manga)
+        }
+    }
+
+    fun deleteChapter(chapter: DownloadedChapter) {
+        viewModelScope.launch {
+            downloadRepository?.deleteChapter(chapter)
+        }
     }
 }

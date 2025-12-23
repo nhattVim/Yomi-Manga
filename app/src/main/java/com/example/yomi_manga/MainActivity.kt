@@ -7,19 +7,35 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.yomi_manga.di.AppContainer
 import com.example.yomi_manga.ui.navigation.NavGraph
 import com.example.yomi_manga.ui.theme.YomiMangaTheme
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
+import com.example.yomi_manga.ui.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            YomiMangaTheme {
+            val context = LocalContext.current
+            
+            val settingsViewModel: SettingsViewModel = viewModel()
+            
+            settingsViewModel.init(
+                AppContainer.provideDownloadRepository(context),
+                AppContainer.provideSettingsRepository(context)
+            )
+            
+            val settingsUiState by settingsViewModel.uiState.collectAsState()
+            
+            YomiMangaTheme(themeMode = settingsUiState.themeMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -28,7 +44,8 @@ class MainActivity : ComponentActivity() {
                     val authViewModel: AuthViewModel = viewModel()
                     NavGraph(
                         navController = navController,
-                        authViewModel = authViewModel
+                        authViewModel = authViewModel,
+                        settingsViewModel = settingsViewModel
                     )
                 }
             }

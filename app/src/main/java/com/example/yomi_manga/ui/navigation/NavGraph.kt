@@ -25,6 +25,7 @@ import com.example.yomi_manga.ui.screen.reader.ReaderScreen
 import com.example.yomi_manga.ui.screen.settings.SettingsScreen
 import com.example.yomi_manga.ui.screen.settings.StorageScreen
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
+import com.example.yomi_manga.ui.viewmodel.SettingsViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -51,7 +52,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
     val startDestination =
@@ -157,6 +159,7 @@ fun NavGraph(
                 ) {
                     SettingsScreen(
                         authViewModel = authViewModel,
+                        settingsViewModel = settingsViewModel, // Truyền instance có Repository vào
                         onLogout = {
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(0) { inclusive = true }
@@ -172,6 +175,7 @@ fun NavGraph(
 
         composable(Screen.Storage.route) {
             StorageScreen(
+                viewModel = settingsViewModel,
                 onBackClick = { navController.popBackStack() },
                 onChapterClick = { chapterId, mangaId ->
                     val encodedUrl =
