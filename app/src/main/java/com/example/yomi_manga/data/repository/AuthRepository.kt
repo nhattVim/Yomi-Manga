@@ -7,6 +7,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,31 +28,19 @@ class AuthRepository(
         return try {
             Log.d(AppConstants.TAG_AUTH, "Signing in with Google, idToken length: ${idToken.length}")
             val credential = GoogleAuthProvider.getCredential(idToken, null)
-            Log.d(AppConstants.TAG_AUTH, "Credential created, signing in...")
             val result = firebaseAuth.signInWithCredential(credential).await()
-            Log.d(AppConstants.TAG_AUTH, "Sign in credential completed")
             
             result.user?.let { user ->
-                Log.d(AppConstants.TAG_AUTH, "Sign in successful, user: ${user.email}, uid: ${user.uid}")
-                
                 firestoreScope.launch {
                     try {
                         userRepository.saveUser(user)
-                        Log.d(AppConstants.TAG_AUTH, "User saved to Firestore")
                     } catch (e: Exception) {
                         Log.e(AppConstants.TAG_AUTH, "Error saving user to Firestore", e)
                     }
                 }
-                
                 Result.success(user)
-            } ?: run {
-                Log.e(AppConstants.TAG_AUTH, "User is null after sign in")
-                Result.failure(Exception("Đăng nhập thất bại: Không lấy được thông tin user"))
-            }
+            } ?: Result.failure(Exception("Đăng nhập thất bại"))
         } catch (e: Exception) {
-            Log.e(AppConstants.TAG_AUTH, "Sign in failed", e)
-            Log.e(AppConstants.TAG_AUTH, "Error message: ${e.message}")
-            Log.e(AppConstants.TAG_AUTH, "Error cause: ${e.cause}")
             Result.failure(e)
         }
     }
@@ -59,5 +48,29 @@ class AuthRepository(
     fun signOut() {
         firebaseAuth.signOut()
     }
-}
 
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser
+            user?.delete()?.await()
+            Result.success(Unit)
+        } catch (e: FirebaseAuthRecentLoginRequiredException) {
+            Log.e(AppConstants.TAG_AUTH, "Recent login required", e)
+            Result.failure(e)
+        } catch (e: Exception) {
+            Log.e(AppConstants.TAG_AUTH, "Delete account failed", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun reauthenticate(idToken: String): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            user?.reauthenticate(credential)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}

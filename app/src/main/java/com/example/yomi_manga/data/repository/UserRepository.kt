@@ -66,4 +66,18 @@ class UserRepository {
             Result.failure(e)
         }
     }
+
+    /**
+     * Xóa sạch dữ liệu user trong Firestore
+     */
+    suspend fun deleteUser(uid: String): Result<Unit> {
+        return try {
+            usersCollection.document(uid).delete().await()
+            Log.d(AppConstants.TAG_USER, "User document deleted: $uid")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(AppConstants.TAG_USER, "Error deleting user document", e)
+            Result.failure(e)
+        }
+    }
 }

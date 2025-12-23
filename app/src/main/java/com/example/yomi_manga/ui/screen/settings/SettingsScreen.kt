@@ -1,5 +1,7 @@
 package com.example.yomi_manga.ui.screen.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,12 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.yomi_manga.ui.viewmodel.AuthViewModel
 import com.example.yomi_manga.ui.viewmodel.SettingsViewModel
+import com.example.yomi_manga.util.FirebaseConfig
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,24 +41,64 @@ fun SettingsScreen(
     
     val user = authUiState.user
     val themeMode = settingsUiState.themeMode
+    val context = LocalContext.current
     
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Cài đặt") },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    // --- Google Sign-In Setup for Re-auth ---
+    val webClientId = remember {
+        FirebaseConfig.getWebClientId(context) ?: FirebaseConfig.getDefaultWebClientId(context)
+    }
+    
+    val gso = remember(webClientId) {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+    }
+    
+    val googleSignInClient = remember(gso) { GoogleSignIn.getClient(context, gso) }
+    
+    val reauthLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (idToken != null) {
+                authViewModel.reauthenticateAndDelete(idToken) { success, _ ->
+                    if (success) onLogout()
+                }
+            }
+        } catch (e: Exception) {
+            authViewModel.setError("Xác thực thất bại: ${e.message}")
+        }
+    }
+    // ----------------------------------------
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Cài đặt") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
-        )
-
+        }
+    ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Group 1: Thông tin người dùng
             item {
                 SettingsGroup(title = "Hồ sơ") {
                     Row(
@@ -98,7 +145,6 @@ fun SettingsScreen(
                 }
             }
 
-            // Group 2: Cài đặt ứng dụng
             item {
                 SettingsGroup(title = "Ứng dụng") {
                     SettingsItemRow(
@@ -123,34 +169,34 @@ fun SettingsScreen(
                 }
             }
 
-            // Group 3: Tài khoản
-            item {
-                SettingsGroup(title = "Tài khoản") {
-                    SettingsItemRow(
-                        title = "Đăng xuất",
-                        icon = Icons.AutoMirrored.Filled.ExitToApp,
-                        iconColor = MaterialTheme.colorScheme.error,
-                        onClick = {
-                            authViewModel.signOut()
-                            onLogout()
-                        }
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-                    SettingsItemRow(
-                        title = "Xoá tài khoản",
-                        icon = Icons.Default.DeleteForever,
-                        iconColor = MaterialTheme.colorScheme.error,
-                        onClick = { /* Xử lý xoá tài khoản */ }
-                    )
+            if (user != null) {
+                item {
+                    SettingsGroup(title = "Tài khoản") {
+                        SettingsItemRow(
+                            title = "Đăng xuất",
+                            icon = Icons.AutoMirrored.Filled.ExitToApp,
+                            iconColor = MaterialTheme.colorScheme.error,
+                            onClick = {
+                                authViewModel.signOut()
+                                onLogout()
+                            }
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        SettingsItemRow(
+                            title = "Xoá tài khoản",
+                            icon = Icons.Default.DeleteForever,
+                            iconColor = MaterialTheme.colorScheme.error,
+                            onClick = { showDeleteAccountDialog = true }
+                        )
+                    }
                 }
             }
         }
     }
 
-    // Dialog chọn Theme
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
@@ -178,6 +224,66 @@ fun SettingsScreen(
             }
         )
     }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            title = { Text("Xoá tài khoản?") },
+            text = { 
+                Text("Hành động này không thể hoàn tác. Mọi dữ liệu cá nhân của bạn sẽ bị xoá khỏi hệ thống.") 
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        authViewModel.deleteAccount { success, error ->
+                            if (success) {
+                                onLogout()
+                            } else if (error == "REQUIRES_REAUTH") {
+                                // Kích hoạt ngay popup Google Sign-In để re-auth
+                                googleSignInClient.signOut().addOnCompleteListener {
+                                    reauthLauncher.launch(googleSignInClient.signInIntent)
+                                }
+                            }
+                        }
+                        showDeleteAccountDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Xoá vĩnh viễn")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(authUiState.error) {
+        if (authUiState.error != null) {
+            snackbarHostState.showSnackbar(authUiState.error!!)
+            authViewModel.clearError()
+        }
+    }
+
+    if (authUiState.isLoading) {
+        AlertDialog(
+            onDismissRequest = { },
+            confirmButton = { },
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text("Đang xử lý...")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -192,7 +298,6 @@ fun SettingsGroup(
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
         )
-        // Thay đổi từ Card sang OutlinedCard để có viền rõ ràng trong cả 2 theme
         OutlinedCard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.outlinedCardColors(
