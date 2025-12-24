@@ -84,7 +84,7 @@ data class Manga(
 ) {
     val title: String get() = name
     val cover: String? get() = thumbUrl?.let { "https://img.otruyenapi.com/uploads/comics/$it" }
-    val description: String? get() = content
+    val description: String? get() = content?.replace(Regex("<[^>]*>"), "")?.trim()
     val genres: List<String>? get() = category?.map { it.name }
     val authorName: String? get() = author?.joinToString(", ")
 }
