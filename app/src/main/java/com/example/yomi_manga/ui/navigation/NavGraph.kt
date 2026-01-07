@@ -137,7 +137,6 @@ fun NavGraph(
                     )
                 ) {
                     LibraryScreen(
-                        authViewModel = authViewModel,
                         onMangaClick = { mangaId ->
                             navController.navigate(Screen.Detail.createRoute(mangaId))
                         }
